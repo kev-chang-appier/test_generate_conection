@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appier AdCloud - Page Template</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /* DS_TOKENS_INJECT */
+
+    /* ========== RESET & BASE ========== */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
+      font-family: "Open Sans", sans-serif;
+      font-size: 14px;
+      background-color: rgb(237, 238, 241);
+      color: rgba(0, 0, 0, 0.87);
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    /* ========== LAYOUT ========== */
+    .portal-layout {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* ========== SIDEBAR — COLLAPSED (default 48px) ========== */
+    .v4-jss27 {
+      width: 48px;
+      z-index: 2;
+      flex-shrink: 0;
+      white-space: nowrap;
+      transition: width 200ms cubic-bezier(0.4, 0, 0.6, 1);
+    }
+
+    .v4-jss27.pinned {
+      width: 224px;
+    }
+
+    .v4-jss28 {
+      width: 48px;
+      border: 0;
+      display: flex;
+      overflow: hidden;
+      /* clip labels when collapsed */
+      box-shadow: rgba(0, 0, 0, 0.05) 5px 0px 10px;
+      transition: width 200ms cubic-bezier(0.4, 0, 0.6, 1);
+      flex-direction: column;
+      justify-content: space-between;
+      background-color: #fff;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      z-index: 1200;
+    }
+
+    /* ===== HOVER EXPAND ===== */
+    .v4-jss28:hover {
+      width: 224px;
+      overflow: visible;
+    }
+
+    /* Reveal labels when hovered */
+    .v4-jss28:hover .v4-jss40 {
+      overflow: visible;
+    }
+
+    /* ========== LOGO AREA ========== */
+    .v4-jss32 {
+      display: flex;
+      padding: 0 12px;
+      min-height: 48px;
+      align-items: center;
+      user-select: none;
+      justify-content: flex-start;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    /* ========== NAV LINKS CONTAINER ========== */
+    .v4-jss36 {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ========== DIVIDER ========== */
+    .v4-jss35 {
+      height: 1px;
+      margin: 0 8px 6px;
+      background: rgb(217, 218, 225);
+      flex-shrink: 0;
+    }
+
+    /* ========== NAV LINK (inactive) ========== */
+    .v4-jss37 {
+      color: rgba(0, 10, 58, 0.57);
+      text-decoration: none;
+      display: block;
+    }
+
+    .v4-jss37:not(.v4-jss38):hover .v4-jss39 {
+      background-color: rgba(0, 10, 58, 0.05);
+    }
+
+    /* ========== NAV LINK (active) ========== */
+    .v4-jss38 {
+      color: rgb(41, 106, 255);
+      text-decoration: none;
+    }
+
+    .v4-jss38>.v4-jss39 {
+      background: currentColor;
+    }
+
+    .v4-jss38 .v4-jss40 {
+      color: rgb(255, 255, 255);
+    }
+
+    .v4-jss38 svg path {
+      fill: rgb(255, 255, 255);
+      fill-opacity: 1;
+    }
+
+    .v4-jss38 svg use {
+      fill: rgb(255, 255, 255);
+      fill-opacity: 1;
+    }
+
+    .v4-jss38 svg rect {
+      fill: none;
+    }
+
+    /* ========== NAV ICON CONTAINER ========== */
+    .v4-jss39 {
+      cursor: pointer;
+      display: flex;
+      padding: 12px;
+      align-items: center;
+      /* prevent hover background from being clipped */
+    }
+
+    .v4-jss39>svg {
+      color: rgba(0, 10, 58, 0.57);
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    /* ========== NAV LABEL (hidden when collapsed) ========== */
+    .v4-jss40 {
+      flex: 1 1 0%;
+      color: rgba(0, 10, 58, 0.7);
+      display: flex;
+      overflow: hidden;
+      /* hidden by default */
+      width: 0;
+      font-size: 14px;
+      font-style: normal;
+      align-items: center;
+      font-weight: 600;
+      line-height: 20px;
+      margin-left: 16px;
+      text-overflow: ellipsis;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      transition: width 200ms cubic-bezier(0.4, 0, 0.6, 1),
+        opacity 150ms ease;
+      opacity: 0;
+    }
+
+    /* Show labels when sidebar is hovered */
+    .v4-jss28:hover .v4-jss40 {
+      width: auto;
+      opacity: 1;
+      overflow: visible;
+    }
+
+    /* Active item label override */
+    .v4-jss38 .v4-jss40 {
+      color: rgb(255, 255, 255);
+    }
+
+    /* Active label text */
+    .v4-jss42 {
+      display: -webkit-box;
+      overflow: hidden;
+      word-break: break-word;
+      white-space: normal;
+      text-overflow: ellipsis;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    /* Active indicator (lock icon) */
+    .v4-jss44 {
+      flex: 0 0 auto;
+      width: 16px;
+      height: 16px;
+      margin-left: 8px;
+    }
+
+    /* Hide lock icon in collapsed state, show on hover */
+    .v4-jss44 {
+      opacity: 0;
+      transition: opacity 150ms ease;
+    }
+
+    .v4-jss28:hover .v4-jss44 {
+      opacity: 1;
+    }
+
+    /* ========== LOGO AREA - EXPANDED ========== */
+
+    /* ========== SIDEBAR WORDMARK ========== */
+    .sidebar-wordmark {
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      transition: opacity 150ms ease, width 200ms cubic-bezier(0.4, 0, 0.6, 1);
+    }
+
+    .v4-jss28:hover .sidebar-wordmark,
+    .v4-jss28.pinned .sidebar-wordmark {
+      opacity: 1;
+      width: auto;
+    }
+
+    .v4-jss28:hover .sidebar-logo-icon,
+    .v4-jss28.pinned .sidebar-logo-icon {
+      display: none;
+    }
+
+    /* ========== PIN BUTTON ========== */
+    .sidebar-pin-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      opacity: 0;
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      transition: opacity 150ms ease, background-color 150ms ease;
+    }
+
+    .sidebar-pin-btn:hover {
+      background-color: rgba(0, 10, 58, 0.05);
+    }
+
+    .v4-jss28:hover .sidebar-pin-btn,
+    .v4-jss28.pinned .sidebar-pin-btn {
+      opacity: 1;
+    }
+
+    .pin-tooltip {
+      position: absolute;
+      left: calc(100% + 8px);
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 16px;
+      letter-spacing: 0.2px;
+      color: var(--color-text-high);
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      box-shadow: var(--shadow-m);
+      transition: opacity 100ms ease;
+      z-index: 200;
+    }
+
+    .sidebar-pin-btn:hover .pin-tooltip {
+      opacity: 1;
+    }
+
+    .pin-icon path {
+      fill: rgba(0, 10, 58, 0.57);
+      transition: fill 150ms ease, fill-opacity 150ms ease;
+    }
+
+    .v4-jss28.pinned .pin-icon path {
+      fill: rgb(41, 106, 255);
+      fill-opacity: 1;
+    }
+
+    /* ========== PINNED STATE ========== */
+    .v4-jss28.pinned {
+      width: 224px;
+      overflow: visible;
+    }
+
+    .v4-jss28.pinned .v4-jss40 {
+      width: auto;
+      opacity: 1;
+      overflow: visible;
+    }
+
+    .v4-jss28.pinned .v4-jss44 {
+      opacity: 1;
+    }
+
+    .v4-jss28.pinned .v4-jss46 {
+      opacity: 1;
+      width: auto;
+    }
+
+    /* ========== USER AVATAR AREA (bottom) ========== */
+    .v4-jss43 {
+      cursor: pointer;
+      display: flex;
+      padding: 12px;
+      align-items: center;
+    }
+
+    .v4-jss43:hover {
+      background-color: rgba(0, 10, 58, 0.05);
+    }
+
+    .v4-MuiAvatar-root {
+      display: flex;
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      overflow: hidden;
+      background: rgba(0, 10, 58, 0.07);
+      flex-shrink: 0;
+    }
+
+    .v4-jss45 {
+      color: rgba(0, 10, 58, 0.7);
+      display: flex;
+      font-size: 12px;
+      align-items: center;
+      font-weight: 600;
+      justify-content: center;
+    }
+
+    .v4-jss46 {
+      color: rgba(0, 10, 58, 0.7);
+      overflow: hidden;
+      font-size: 14px;
+      font-style: normal;
+      font-weight: 600;
+      line-height: 20px;
+      margin-left: 16px;
+      text-overflow: ellipsis;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      opacity: 0;
+      width: 0;
+      transition: opacity 150ms ease, width 200ms cubic-bezier(0.4, 0, 0.6, 1);
+    }
+
+    .v4-jss28:hover .v4-jss46 {
+      opacity: 1;
+      width: auto;
+    }
+
+    /* ========== MAIN CONTENT AREA ========== */
+    .v4-jss66 {
+      flex: 1 1 0%;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      /* No z-index: a flex item with z-index creates a stacking context that traps
+         position:fixed overlays (dialog/drawer masks) below the sidebar (z-index 1200).
+         The sidebar is positioned above content regardless, so this is not needed. */
+    }
+
+    /* ========== TOP HEADER BAR ========== */
+    .css-1td6wz2 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 24px;
+      background-color: rgb(255, 255, 255);
+      min-height: 48px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    /* Page title */
+    .css-b9p9v6 {
+      margin: 0;
+      font-style: normal;
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 20px;
+      letter-spacing: 0.2px;
+      font-family: "Open Sans", sans-serif;
+      color: rgba(0, 0, 0, 0.87);
+    }
+
+    /* Header right actions */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Primary button */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background-color: rgb(41, 106, 255);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      height: 32px;
+      cursor: pointer;
+      font-family: "Open Sans", sans-serif;
+      letter-spacing: 0.2px;
+      transition: background-color 0.15s ease;
+    }
+
+    .btn-primary:hover {
+      background-color: rgb(26, 84, 230);
+    }
+
+    /* ========== TABLE UTILITIES ========== */
+    /* Sort icons — hidden by default; muted hint on hover; active in blue */
+    .sort-icon { display: none; }
+    th[data-sortable]:not([data-sort]):hover .sort-down { display: block; color: rgba(0,10,58,0.3); }
+    th[data-sort="asc"]  .sort-up   { display: block; color: #296AFF; }
+    th[data-sort="desc"] .sort-down { display: block; color: #296AFF; }
+    /* Table row states */
+    .tbl-row:hover td { background: #F7F8F9 !important; }
+    .tbl-row.selected td { background: #EAF1FF !important; }
+    .tbl-row.selected:hover td { background: #D6E6FF !important; }
+    /* Menu items */
+    .menu-item:hover { background: rgba(0,10,58,0.05); }
+    /* Filter pills */
+    .filter-pill:hover { background: rgba(0,10,58,0.05) !important; }
+    .filter-pill.open  { border-color: #296AFF !important; }
+
+    /* ========== PAGE CONTENT PLACEHOLDER ========== */
+    .page-content {
+      flex: 1;
+      padding: 24px;
+      overflow: auto;
+    }
+
+    .content-placeholder {
+      background: rgba(0, 0, 0, 0.03);
+      border: 2px dashed rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 300px;
+      color: rgba(0, 0, 0, 0.3);
+      font-size: 18px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<!-- CUSTOMIZABLE ZONE: edit only the page title (<h5 class="css-b9p9v6">), the header primary action
+     (.btn-primary), the active nav item (add "v4-jss38" + aria-current="page"), and inside ".page-content"
+     (search "PAGE_CONTENT_INJECT"). Inject icon <symbol>s at "ICON_SPRITE_INJECT", CSS tokens at
+     "DS_TOKENS_INJECT", page JS at "PAGE_END_INJECT". Everything else is fixed boilerplate. -->
+<body>
+
+  <!-- Inline SVG sprite for icons -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <symbol id="broadcastOutlined20" viewBox="0 0 20 20">
+      <path
+        d="M12.5 3.803v10.395L8.859 11.77c-.243-.17-.54-.27-.86-.27H5a.5.5 0 0 1-.5-.5V7a.5.5 0 0 1 .5-.5h2.698a2.5 2.5 0 0 0 1.387-.42L12.5 3.803ZM14 2.87a1 1 0 0 0-1.555-.832L8.253 4.832A1 1 0 0 1 7.698 5H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h1.25v4a.75.75 0 0 0 1.5 0v-4H8l4.445 2.964A1 1 0 0 0 14 15.132V2.869ZM18 9a3 3 0 0 1-3 3v-1.5a1.5 1.5 0 1 0 0-3V6a3 3 0 0 1 3 3Z" />
+    </symbol>
+    <symbol id="applicationOutlined24" viewBox="0 0 24 24">
+      <path
+        d="M17 9.828 14.172 7 17 4.172 19.828 7 17 9.828Zm-4.95-2.12a1 1 0 0 1 0-1.415l4.243-4.243a1 1 0 0 1 1.414 0l4.243 4.243a1 1 0 0 1 0 1.414l-4.243 4.243a1 1 0 0 1-1.414 0L12.05 7.707ZM5 9V5h4v4H5ZM3 4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4Zm2 15v-4h4v4H5Zm-2-5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6Zm12 1v4h4v-4h-4Zm-1-2a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-6Z" />
+    </symbol>
+    <symbol id="addOutlined16" viewBox="0 0 16 16">
+      <path
+        d="M8.75 4.75a.75.75 0 0 0-1.5 0v2.5h-2.5a.75.75 0 0 0 0 1.5h2.5v2.5a.75.75 0 0 0 1.5 0v-2.5h2.5a.75.75 0 0 0 0-1.5h-2.5v-2.5Z" />
+    </symbol>
+    <!-- Lock / permissions indicator icon (shown on active & hover items) -->
+    <symbol id="lockOutlined16" viewBox="0 0 16 16">
+      <path fill-rule="evenodd" clip-rule="evenodd"
+        d="M5.35002 5.60001C5.35002 4.13646 6.53647 2.95001 8.00002 2.95001C9.46358 2.95001 10.65 4.13646 10.65 5.60001V7.20001H5.35002V5.60001ZM3.85002 7.20001V5.60001C3.85002 3.30803 5.70804 1.45001 8.00002 1.45001C10.292 1.45001 12.15 3.30803 12.15 5.60001V7.20001H12.6C13.1523 7.20001 13.6 7.64773 13.6 8.20001V13.4C13.6 13.9523 13.1523 14.4 12.6 14.4H3.40002C2.84774 14.4 2.40002 13.9523 2.40002 13.4V8.20001C2.40002 7.64773 2.84774 7.20001 3.40002 7.20001H3.85002ZM3.90002 12.9V8.70001H12.1V12.9H3.90002Z" />
+    </symbol>
+    <!-- ICON_SPRITE_INJECT -->
+  </svg>
+
+  <div class="portal-layout">
+
+    <!-- ===== LEFT SIDEBAR NAVIGATION ===== -->
+    <div class="v4-jss27">
+      <div class="v4-jss28">
+
+        <!-- Logo -->
+        <div class="v4-jss32">
+          <img
+            src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0yMC42NDU5IDE3LjM4OTlDMjEuMjcxNyAxNi44MjM4IDIxLjgxMTIgMTYuMjM5IDIxLjk1ODcgMTYuMDI4MVYxOC4zNDE5QzIxLjE4NjUgMTkuNTQxMSAyMC41Mzk5IDIwLjA5ODIgMjAuMjAwNCAyMC4zNDI5QzE5LjMyNSAyMC45NzM4IDE4LjQzNiAyMS4wNjY0IDE4LjQxMyAyMS4wNjgzQzE4LjE2OTkgMjEuMTI0NyAxNy45MTYzIDIxLjE1NDIgMTcuNjUyNyAyMS4xNTQyQzE2Ljg3ODkgMjEuMTU0MiAxNi4xNzggMjAuODg0OCAxNS41NTM5IDIwLjM0NzFDMTQuOTI3NCAxOS44MTExIDE0LjUwNTYgMTguOTA1NSAxNC4yODAxIDE3LjYzMTNDMTMuOTA2MiAxOC42MDM2IDEzLjI5MjEgMTkuNDM2NiAxMi40NDQxIDIwLjEyMjVDMTEuNTk0NCAyMC44MTA5IDEwLjU2OTcgMjEuMTU0MiA5LjM2OTg5IDIxLjE1NDJDOC42MjE2NyAyMS4xNTQyIDcuODY0MzIgMjAuOTk2MSA3LjEwMjk0IDIwLjY4NTZDNi4zNDA0NyAyMC4zNzMgNS42NjE3IDE5Ljg3ODEgNS4wNjE4OSAxOS4yMDQ1QzQuNDYxNzEgMTguNTMwMyAzLjk2ODgxIDE3LjY1NTggMy41ODA2MyAxNi41ODIyQzMuMTkzMzYgMTUuNTA4MiAzIDE0LjIwOCAzIDEyLjY4NDJDMyAxMS41MDg4IDMuMTMyNSAxMC4yOTI5IDMuMzkyNTcgOS4wMzA2QzMuNjU1NTYgNy43Njg0NiA0LjA2ODIzIDYuNjE5ODEgNC42MzEzMSA1LjU4MzU2QzUuMTkyNTYgNC41NDc0OSA1LjkyMTQgMy42ODk0MyA2LjgyMjQxIDMuMDE0ODdDNy43MjM1OSAyLjMzOTc1IDguNzk1NjYgMi4wMDQ1NyAxMC4wNDU1IDIuMDA0NTdDMTAuNjk1NiAyLjAwNDU3IDExLjM2MjcgMi4xMzk0NSAxMi4wNTA0IDIuNDA2ODJDMTIuNzM3IDIuNjc4NzcgMTMuNjA4NCAzLjM1MTE0IDEzLjYwODQgMy4zNTExNFYySDE3LjM1MzJWMTQuOTMyNUMxNy4zNTMyIDE1LjIzMzMgMTcuMzY2IDE1LjU3NjkgMTcuMzkxMiAxNS45NjM0QzE3LjQxNiAxNi4zNDk2IDE3LjQ4MzMgMTYuNzE3OCAxNy41OTYyIDE3LjA2OTNDMTcuNzEwMSAxNy40MTk1IDE3Ljg4NDEgMTcuNzEyMiAxOC4xMjA5IDE3Ljk1MDlDMTguMzU5NiAxOC4xODgyIDE4LjcwMjUgMTguMzAzOCAxOS4xNTE3IDE4LjMwMzhDMTkuNjYyMiAxOC4zMDM4IDIwLjIxNDEgMTcuNzkwNiAyMC41MzgxIDE3LjQ4OTNDMjAuNTc3NiAxNy40NTI2IDIwLjYxMzcgMTcuNDE5IDIwLjY0NTkgMTcuMzg5OVpNMTMuMzYxOCAxNS43MDIyQzEzLjUzNDMgMTUuMjIxMiAxMy42MjE3IDE0LjcwODUgMTMuNjIxNyAxNC4xNjUyVjUuNzI0MDNDMTMuNDQ3MSA1LjMwNDIzIDEzLjE4OCA0LjkzMzQxIDEyLjg0NTMgNC42MTMyMUMxMi40OTkgNC4yOTQ2NiAxMi4wMDY0IDQuMTMzMSAxMS4zNjc1IDQuMTMzMUMxMC41Nzk2IDQuMTMzMSA5LjkxNTEzIDQuMzk3MDEgOS4zNzQ4OSA0LjkyNzkyQzguODMwNDUgNS40NTkzOSA4LjM4ODE4IDYuMTMyODYgOC4wNDUzMiA2Ljk0NjE0QzcuNjk5OTEgNy43NjE4IDcuNDQ4MjUgOC42NjcxOSA3LjI4ODMzIDkuNjY3OTlDNy4xMjg5NyAxMC42NjYgNy4wNDc2NCAxMS42MjI4IDcuMDQ3NjQgMTIuNTM0OUM3LjA0NzY0IDE0LjUzNDUgNy4zNTQ0OSAxNS45Nzg1IDcuOTcwMzkgMTYuODY3OEM4LjU4NjQ3IDE3Ljc1NDkgOS4zMzc3OSAxOC4xOTk2IDEwLjIyMTYgMTguMTk5NkMxMC42OSAxOC4xOTk2IDExLjEzMzQgMTguMDkwMSAxMS41NTE0IDE3Ljg2NzlDMTEuOTcwNiAxNy42NDY0IDEyLjMzMzIgMTcuMzQ5IDEyLjY0MzQgMTYuOTc5MUMxMi45NDg2IDE2LjYwOTQgMTMuMTg4IDE2LjE4MjMgMTMuMzYxOCAxNS43MDIyWiIgZmlsbD0iIzAzMjFBQSIvPgo8L3N2Zz4K"
+            width="24" height="24" alt="Appier" class="sidebar-logo-icon" style="flex-shrink:0;">
+          <span class="sidebar-wordmark"><!-- WORDMARK_ASSET --></span>
+          <button class="sidebar-pin-btn" id="sidebarPinBtn" aria-label="Pin menu">
+            <span class="pin-tooltip" id="pinTooltipText">Pin menu</span>
+            <svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" class="pin-icon">
+              <path fill-rule="evenodd" clip-rule="evenodd"
+                d="M9.63942 7.38093L10.7672 7.47622L11.4296 6.55851L13.2319 4.06135C13.2559 4.02803 13.2908 4.0051 13.3452 4.00064C13.3997 3.99618 13.4405 4.01316 13.4723 4.04466L15.9635 6.51013C16.0155 6.56158 16.0137 6.64228 15.9453 6.69059L13.5267 8.40036L12.5486 9.09173L12.6964 10.2803C12.7334 10.5781 12.7296 10.8794 12.6851 11.1755L8.87167 7.40152C9.12533 7.36624 9.38298 7.35926 9.63942 7.38093ZM14.8791 2.62312C13.9399 1.69363 12.3822 1.82122 11.6102 2.89087L9.80783 5.38803C8.62152 5.28778 7.40798 5.57618 6.37831 6.25323C5.88393 6.5783 5.88843 7.26298 6.30814 7.67835L8.48998 9.83762L2.22136 16.8977C1.60268 17.5945 2.40546 18.3973 3.10227 17.7786L10.1716 11.5018L12.3877 13.695C12.8074 14.1104 13.4993 14.1149 13.8277 13.6256C14.5504 12.5492 14.8349 11.2698 14.6811 10.0335L17.0998 8.32375C18.1806 7.55971 18.3096 6.01807 17.3704 5.08858L14.8791 2.62312Z" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Nav links -->
+        <div class="v4-jss36">
+
+          <a class="v4-jss37" href="">
+            <div class="v4-jss39">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M18 4.5C18 5.32843 17.3284 6 16.5 6C16.4676 6 16.4354 5.99897 16.4034 5.99694L13.8448 9.83484C13.9442 10.0353 14 10.2611 14 10.5C14 11.3284 13.3284 12 12.5 12C11.6716 12 11 11.3284 11 10.5C11 10.4232 11.0058 10.3477 11.0169 10.274L8.04622 7.89744C7.87696 7.96365 7.69272 8 7.5 8C7.46756 8 7.43536 7.99897 7.40343 7.99694L4.84483 11.8348C4.94416 12.0353 5 12.2611 5 12.5C5 13.3284 4.32843 14 3.5 14C2.67157 14 2 13.3284 2 12.5C2 11.6716 2.67157 11 3.5 11C3.53244 11 3.56464 11.001 3.59657 11.0031L6.15517 7.16516C6.05584 6.96471 6 6.73887 6 6.5C6 5.67157 6.67157 5 7.5 5C8.32843 5 9 5.67157 9 6.5C9 6.57682 8.99423 6.65229 8.98309 6.726L11.9538 9.10256C12.123 9.03635 12.3073 9 12.5 9C12.5324 9 12.5646 9.00103 12.5966 9.00306L15.1552 5.16516C15.0558 4.96471 15 4.73887 15 4.5C15 3.67157 15.6716 3 16.5 3C17.3284 3 18 3.67157 18 4.5ZM2.75 16C2.33579 16 2 16.3358 2 16.75C2 17.1642 2.33579 17.5 2.75 17.5H17.25C17.6642 17.5 18 17.1642 18 16.75C18 16.3358 17.6642 16 17.25 16H2.75Z"
+                  fill="currentColor" />
+              </svg>
+              <div class="v4-jss40">Reports</div>
+            </div>
+          </a>
+
+          <a class="v4-jss37" href="">
+            <div class="v4-jss39">
+              <svg preserveAspectRatio="xMidYMid meet" width="24" height="24" viewBox="0 0 20 20" fill="currentColor" fill-rule="evenodd"
+                xmlns="http://www.w3.org/2000/svg">
+                <use href="#broadcastOutlined20"></use>
+              </svg>
+              <div class="v4-jss40">Campaigns</div>
+            </div>
+          </a>
+
+          <!-- User permissions — gear/settings icon -->
+          <a class="v4-jss37" href="">
+            <div class="v4-jss39">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="24" height="24"></rect>
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M10.7498 4.6513L10.8613 4H13.1382L13.2453 4.62564C13.4368 5.74396 14.2273 6.55252 15.0795 6.99575C15.1047 7.00884 15.1297 7.02209 15.1547 7.0355C15.9266 7.45009 16.9255 7.65711 17.8959 7.30333L18.5812 7.05345L19.6963 8.93307L19.4642 9.11909C18.5541 9.84816 18.2478 10.9645 18.2664 11.9222C18.267 11.9574 18.2674 11.9927 18.2674 12.028C18.2674 12.0526 18.2672 12.0771 18.2669 12.1016C18.2541 13.053 18.5627 14.1589 19.4661 14.8826L19.6961 15.0669L18.581 16.9465L17.9565 16.7189C16.9772 16.3618 15.9694 16.5758 15.1938 16.9994C15.1538 17.0213 15.1134 17.0427 15.0728 17.0638C14.2189 17.5066 13.4266 18.3158 13.2348 19.4357L13.1382 20H10.8613L10.7603 19.4101C10.5698 18.2978 9.78634 17.4916 8.94056 17.0468C8.90696 17.0291 8.87356 17.0112 8.84036 16.993C8.06369 16.5666 7.05315 16.3506 6.07115 16.7086L5.41854 16.9465L4.30344 15.0669L4.57878 14.8463C5.47762 14.1262 5.7878 13.0272 5.77877 12.0801L5.77852 12.028C5.77852 11.9998 5.77874 11.9717 5.77918 11.9436C5.79393 10.9901 5.48601 9.88072 4.58046 9.15523L4.30316 8.93307L5.41827 7.05345L6.13164 7.31354C7.10471 7.6683 8.10636 7.45919 8.87935 7.04188L8.93383 7.01281C9.77793 6.5676 10.5596 5.76209 10.7498 4.6513ZM10.4397 2C9.70895 2 9.08455 2.52656 8.9612 3.2468L8.77849 4.31369C8.72058 4.65183 8.45692 5.00321 8.00077 5.2438C7.97685 5.25641 7.95301 5.26914 7.92923 5.28198C7.51255 5.50693 7.11382 5.54285 6.81671 5.43452L5.71367 5.03237C5.03577 4.78522 4.27796 5.05573 3.90981 5.67629L2.3614 8.28629C1.97997 8.92922 2.13017 9.75487 2.71359 10.2223L3.32997 10.7161C3.60342 10.9352 3.78804 11.3556 3.77942 11.9127C3.77882 11.9511 3.77852 11.9895 3.77852 12.028C3.77852 12.0518 3.77864 12.0755 3.77886 12.0991C3.78413 12.6516 3.59981 13.0679 3.32829 13.2855L2.71386 13.7777C2.13045 14.2451 1.98025 15.0708 2.36167 15.7137L3.91008 18.3237C4.27824 18.9443 5.03605 19.2148 5.71394 18.9676L6.75621 18.5876C7.05598 18.4783 7.45872 18.5161 7.87802 18.7462C7.92163 18.7702 7.96551 18.7937 8.00962 18.8169C8.46672 19.0573 8.73101 19.4091 8.789 19.7477L8.9612 20.7532C9.08455 21.4734 9.70895 22 10.4397 22H13.5598C14.2905 22 14.9149 21.4734 15.0383 20.7532L15.2061 19.7733C15.2645 19.4325 15.5318 19.0787 15.9935 18.8393C16.0469 18.8116 16.0999 18.7834 16.1525 18.7547C16.571 18.5261 16.9725 18.4889 17.2715 18.5979L18.2856 18.9676C18.9635 19.2148 19.7213 18.9443 20.0894 18.3237L21.6378 15.7137C22.0193 15.0708 21.8691 14.2451 21.2856 13.7777L20.7165 13.3218C20.4437 13.1032 20.2592 12.6841 20.2667 12.1286C20.2672 12.0951 20.2674 12.0616 20.2674 12.028C20.2674 11.9797 20.2669 11.9315 20.266 11.8834C20.2551 11.3233 20.4399 10.9001 20.7147 10.6799L21.2859 10.2223C21.8693 9.75487 22.0195 8.92922 21.6381 8.28629L20.0897 5.67629C19.7215 5.05573 18.9637 4.78522 18.2858 5.03237L17.2108 5.42431C16.9145 5.53235 16.517 5.49697 16.1011 5.27359C16.0683 5.25598 16.0354 5.23858 16.0024 5.22139C15.5416 4.98174 15.2749 4.62841 15.2166 4.28804L15.0383 3.2468C14.9149 2.52656 14.2905 2 13.5598 2H10.4397ZM14 12C14 13.1046 13.1046 14 12 14C10.8954 14 10 13.1046 10 12C10 10.8954 10.8954 10 12 10C13.1046 10 14 10.8954 14 12ZM16 12C16 14.2091 14.2091 16 12 16C9.79087 16 8.00001 14.2091 8.00001 12C8.00001 9.79086 9.79087 8 12 8C14.2091 8 16 9.79086 16 12Z"
+                  fill="#000A3A" fill-opacity="0.57"></path>
+              </svg>
+              <div class="v4-jss40">User permissions</div>
+            </div>
+          </a>
+
+          <!-- Divider (between admin items and entity items) -->
+          <div class="v4-jss35"></div>
+
+          <!-- ACTIVE item (Client entity management) -->
+          <a class="v4-jss37 v4-jss38" href="" aria-current="page">
+            <div class="v4-jss39">
+              <svg preserveAspectRatio="xMidYMid meet" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd"
+                xmlns="http://www.w3.org/2000/svg">
+                <use href="#applicationOutlined24"></use>
+              </svg>
+              <div class="v4-jss40">
+                <span class="v4-jss42">Client entity management</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" fill-rule="evenodd" xmlns="http://www.w3.org/2000/svg"
+                  class="v4-jss44">
+                  <use href="#lockOutlined16"></use>
+                </svg>
+              </div>
+            </div>
+          </a>
+
+          <a class="v4-jss37" href="">
+            <div class="v4-jss39">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M4 6V8H6V6H4ZM3 4C2.44772 4 2 4.44772 2 5V9C2 9.55228 2.44772 10 3 10H7C7.55228 10 8 9.55228 8 9V5C8 4.44772 7.55228 4 7 4H3ZM11 4C10.4477 4 10 4.44772 10 5C10 5.55228 10.4477 6 11 6L21 6C21.5523 6 22 5.55229 22 5C22 4.44772 21.5523 4 21 4H11ZM11 8C10.4477 8 10 8.44772 10 9C10 9.55228 10.4477 10 11 10L21 10C21.5523 10 22 9.55229 22 9C22 8.44772 21.5523 8 21 8L11 8ZM4 16V18H6V16H4ZM3 14C2.44772 14 2 14.4477 2 15V19C2 19.5523 2.44772 20 3 20H7C7.55228 20 8 19.5523 8 19V15C8 14.4477 7.55228 14 7 14H3ZM11 14C10.4477 14 10 14.4477 10 15C10 15.5523 10.4477 16 11 16L21 16C21.5523 16 22 15.5523 22 15C22 14.4477 21.5523 14 21 14H11ZM11 18C10.4477 18 10 18.4477 10 19C10 19.5523 10.4477 20 11 20H21C21.5523 20 22 19.5523 22 19C22 18.4477 21.5523 18 21 18H11Z"
+                  fill="currentColor" />
+              </svg>
+              <div class="v4-jss40">
+                Account list
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" fill-rule="evenodd" xmlns="http://www.w3.org/2000/svg"
+                  class="v4-jss44">
+                  <use href="#lockOutlined16"></use>
+                </svg>
+              </div>
+            </div>
+          </a>
+
+          <a class="v4-jss37" href="/schedules">
+            <div class="v4-jss39">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M6.5 3.25C6.5 2.83579 6.16421 2.5 5.75 2.5C5.33579 2.5 5 2.83579 5 3.25V4H4C2.89543 4 2 4.89543 2 6V15C2 16.1046 2.89543 17 4 17H16C17.1046 17 18 16.1046 18 15V6C18 4.89543 17.1046 4 16 4H15V3.25C15 2.83579 14.6642 2.5 14.25 2.5C13.8358 2.5 13.5 2.83579 13.5 3.25V4H6.5V3.25ZM13.5 5.75V5.5H6.5V5.75C6.5 6.16421 6.16421 6.5 5.75 6.5C5.33579 6.5 5 6.16421 5 5.75V5.5H4C3.72386 5.5 3.5 5.72386 3.5 6V8H16.5V6C16.5 5.72386 16.2761 5.5 16 5.5H15V5.75C15 6.16421 14.6642 6.5 14.25 6.5C13.8358 6.5 13.5 6.16421 13.5 5.75ZM16.5 9.5H3.5V15C3.5 15.2761 3.72386 15.5 4 15.5H16C16.2761 15.5 16.5 15.2761 16.5 15V9.5Z"
+                  fill="currentColor" />
+              </svg>
+              <div class="v4-jss40">
+                Report schedule
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" fill-rule="evenodd" xmlns="http://www.w3.org/2000/svg"
+                  class="v4-jss44">
+                  <use href="#lockOutlined16"></use>
+                </svg>
+              </div>
+            </div>
+          </a>
+
+        </div><!-- /.v4-jss36 -->
+
+        <!-- Bottom divider (separates nav from user area) -->
+        <div class="v4-jss35" style="margin-top: auto;"></div>
+
+        <!-- User avatar (bottom) -->
+        <div>
+          <div class="v4-jss43">
+            <div class="v4-MuiAvatar-root">
+              <div class="v4-jss45">M</div>
+            </div>
+            <span class="v4-jss46">Mingliang Liu</span>
+          </div>
+        </div>
+
+      </div><!-- /.v4-jss28 -->
+    </div><!-- /.v4-jss27 -->
+
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="v4-jss66">
+
+      <!-- Top Header Bar -->
+      <div class="css-1td6wz2">
+        <!-- Page title — the ONE place the page title lives. Edit the <h5> text to match the screen
+             (AdCloud DS2 chrome is text-only — no leading icon). Setting it is mandatory: never ship the
+             default "Page Title". Do NOT add another title/heading in PAGE_CONTENT_INJECT (double header);
+             start injected content at the first toolbar/section/card. -->
+        <h5 class="css-b9p9v6">Page Title</h5>
+        <div class="header-actions">
+          <button class="btn-primary">
+            <svg width="16" height="16" fill="currentColor" fill-rule="evenodd" xmlns="http://www.w3.org/2000/svg">
+              <use href="#addOutlined16"></use>
+            </svg>
+            Create
+          </button>
+        </div>
+      </div>
+
+      <!-- Page Content Placeholder -->
+      <div class="page-content">
+        <!-- PAGE_CONTENT_INJECT -->
+      </div>
+
+    </div><!-- /.v4-jss66 -->
+
+  </div><!-- /.portal-layout -->
+
+  <script>
+    const sidebar = document.querySelector('.v4-jss28');
+    const sidebarSpacer = document.querySelector('.v4-jss27');
+    var pinBtn = document.getElementById('sidebarPinBtn');
+    var pinTooltip = document.getElementById('pinTooltipText');
+    pinBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      sidebar.classList.toggle('pinned');
+      sidebarSpacer.classList.toggle('pinned');
+      var isPinned = sidebar.classList.contains('pinned');
+      pinTooltip.textContent = isPinned ? 'Unpin menu' : 'Pin menu';
+      pinBtn.setAttribute('aria-label', isPinned ? 'Unpin menu' : 'Pin menu');
+    });
+
+    // positionMenu — use for any floating menu/dropdown inside overflow:hidden ancestors.
+    // position:fixed avoids clipping; _trigger lets the scroll handler reposition the open menu.
+    function positionMenu(btn, menu) {
+      var r = btn.getBoundingClientRect();
+      menu.style.display = 'block';
+      var mw = menu.offsetWidth, mh = menu.offsetHeight;
+      menu.style.left = Math.max(8, r.right - mw) + 'px';
+      menu.style.top  = (r.bottom + 4 + mh > window.innerHeight - 8)
+                        ? r.top - mh - 4 + 'px' : r.bottom + 4 + 'px';
+      menu._trigger = btn;
+    }
+    // Reposition any open .menu-panel when any scrollable container scrolls.
+    document.addEventListener('scroll', function() {
+      document.querySelectorAll('.menu-panel').forEach(function(m) {
+        if (m.style.display === 'block' && m._trigger) positionMenu(m._trigger, m);
+      });
+    }, true);
+
+    // Sort headers — unsorted → asc → desc → unsorted; only the active column shows its icon.
+    // Requires th[data-sortable] with .sort-up/.sort-down SVGs inside. See components/table.md.
+    document.querySelectorAll('th[data-sortable]').forEach(function(th) {
+      th.addEventListener('click', function(e) {
+        if (e.target.closest('.resize-handle')) return;
+        var cur = th.dataset.sort;
+        document.querySelectorAll('th[data-sortable]').forEach(function(t) { t.removeAttribute('data-sort'); });
+        if (!cur) { th.dataset.sort = 'asc'; }
+        else if (cur === 'asc') { th.dataset.sort = 'desc'; }
+        // desc → no attribute (unsorted)
+      });
+    });
+  </script>
+
+  <!-- PAGE_END_INJECT -->
+  <!-- SWITCHER_INJECT -->
+</body>
+
+</html>

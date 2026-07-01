@@ -1,0 +1,133 @@
+<!-- ====================================================================
+     STATE SWITCHER — dev-only preview control (NOT part of the product UI)
+     Append this block just before </body>. The page must define, in its own
+     <script>, a global list of the screen's states BEFORE this block runs:
+
+         window.PROTOSTATES = [
+           { id:'populated',    label:'Populated',           apply:function(){} },   // first = default
+           { id:'empty',        label:'Empty — no data',     apply:showEmpty },
+           { id:'empty-filter', label:'Empty — no matches',  apply:showNoMatches },
+           { id:'selected',     label:'Rows selected',       apply:function(){ selectAll(); } },
+           { id:'drawer-create',label:'Create drawer',       apply:function(){ openCreate(); } },
+           { id:'drawer-edit',  label:'Edit drawer',         apply:function(){ openEdit('c001'); } },
+           { id:'confirm',      label:'Delete confirm',      apply:function(){ openBulkDelete(); } }
+         ];
+
+     Switching reloads the page at #state=<id>, so every state is a clean fresh
+     render (no residual DOM from the previous state). The pill is draggable
+     (drag to reposition; it stays inside the viewport and remembers where you
+     left it across state reloads). The control hides itself
+     when the URL contains `shot` (e.g. file://...#state=empty&shot) so the
+     Verification render-judge screenshots are clean product-only captures.
+     ==================================================================== -->
+<div id="proto-switcher">
+  <button id="proto-switcher-btn" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Switch prototype state">
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M8 1.8 1.8 5 8 8.2 14.2 5 8 1.8Z M1.8 8 8 11.2 14.2 8 M1.8 11 8 14.2 14.2 11"
+            stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+    </svg>
+    <span id="proto-switcher-label">States</span>
+    <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <div id="proto-switcher-menu" role="menu" hidden></div>
+</div>
+<style>
+  #proto-switcher{position:fixed;right:20px;bottom:20px;z-index:2147483000;font-family:'Open Sans',system-ui,-apple-system,sans-serif;}
+  #proto-switcher-btn{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;border:none;border-radius:19px;
+    background:#1B1F2A;color:#fff;font-size:13px;font-weight:600;letter-spacing:.2px;cursor:grab;box-shadow:0 4px 16px rgba(0,0,0,.30);
+    touch-action:none;user-select:none;-webkit-user-select:none;}
+  #proto-switcher.dragging #proto-switcher-btn{cursor:grabbing;}
+  #proto-switcher-btn:hover{background:#2A3140;}
+  #proto-switcher-btn:focus-visible{outline:2px solid #5C93FF;outline-offset:2px;}
+  #proto-switcher-menu{position:absolute;right:0;bottom:46px;min-width:208px;background:#1B1F2A;border-radius:10px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.38);}
+  #proto-switcher-menu[hidden]{display:none;}
+  .proto-state-item{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border:none;background:none;color:#C9CEDA;
+    font:600 13px/1.2 inherit;letter-spacing:.2px;text-align:left;border-radius:6px;cursor:pointer;}
+  .proto-state-item:hover{background:#2A3140;color:#fff;}
+  .proto-state-item:focus-visible{outline:2px solid #5C93FF;outline-offset:-2px;}
+  .proto-state-item .dot{width:6px;height:6px;border-radius:50%;background:transparent;flex:none;}
+  .proto-state-item.active{color:#fff;} .proto-state-item.active .dot{background:#5C93FF;}
+  @media print{#proto-switcher{display:none;}}
+</style>
+<script>
+(function(){
+  var SHOT = /[?#&]shot\b/.test(location.href);          // screenshot mode: apply state, hide control
+  var sw = document.getElementById('proto-switcher');
+  var states = window.PROTOSTATES || [];
+  var cur = (location.hash.match(/state=([\w-]+)/) || [])[1] || (states[0] && states[0].id);
+  var active = states.filter(function(s){ return s.id === cur; })[0] || states[0];
+  if (active) { try { active.apply && active.apply(); } catch (e) { /* state fn missing */ } }
+  if (SHOT) { if (sw) sw.style.display = 'none'; return; }   // clean product-only capture
+  if (!states.length || !sw) { if (sw) sw.style.display = 'none'; return; }
+  var btn = document.getElementById('proto-switcher-btn'),
+      menu = document.getElementById('proto-switcher-menu'),
+      label = document.getElementById('proto-switcher-label');
+  if (active) label.textContent = active.label;
+  states.forEach(function(s){
+    var b = document.createElement('button');
+    b.className = 'proto-state-item' + (s.id === (active && active.id) ? ' active' : '');
+    b.setAttribute('role','menuitem'); b.type = 'button';
+    b.innerHTML = '<span class="dot"></span>';
+    b.appendChild(document.createTextNode(s.label));
+    b.onclick = function(){ location.hash = 'state=' + s.id; location.reload(); };
+    menu.appendChild(b);
+  });
+
+  // ---- Position: clamp to viewport, persist across the state reload ------
+  var MARGIN = 12, POS_KEY = 'proto-switcher-pos';
+  function place(x, y){                                    // x,y = desired top-left, in px
+    var r = sw.getBoundingClientRect();
+    var maxX = window.innerWidth  - r.width  - MARGIN;
+    var maxY = window.innerHeight - r.height - MARGIN;
+    x = Math.max(MARGIN, Math.min(x, Math.max(MARGIN, maxX)));
+    y = Math.max(MARGIN, Math.min(y, Math.max(MARGIN, maxY)));
+    sw.style.left = x + 'px'; sw.style.top = y + 'px';
+    sw.style.right = 'auto'; sw.style.bottom = 'auto';
+  }
+  try { var saved = JSON.parse(sessionStorage.getItem(POS_KEY) || 'null');
+        if (saved) place(saved.x, saved.y); } catch (e) {}
+  window.addEventListener('resize', function(){
+    if (sw.style.left) { var r = sw.getBoundingClientRect(); place(r.left, r.top); }
+    positionMenu();
+  });
+
+  // ---- Menu placement: flip up/down + left/right so it stays on-screen ---
+  function positionMenu(){
+    if (menu.hidden) return;
+    var r = sw.getBoundingClientRect();
+    var openUp = r.top + r.height / 2 > window.innerHeight / 2;
+    menu.style.top = openUp ? 'auto' : '46px'; menu.style.bottom = openUp ? '46px' : 'auto';
+    var alignRight = r.left + r.width / 2 > window.innerWidth / 2;
+    menu.style.right = alignRight ? '0' : 'auto'; menu.style.left = alignRight ? 'auto' : '0';
+  }
+
+  // ---- Drag (threshold keeps a plain click working as menu toggle) -------
+  var DRAG_THRESHOLD = 4, down = null, dragged = false;
+  btn.addEventListener('pointerdown', function(e){
+    if (e.button != null && e.button !== 0) return;
+    var r = sw.getBoundingClientRect();
+    down = { px:e.clientX, py:e.clientY, ox:r.left, oy:r.top };
+    dragged = false; btn.setPointerCapture(e.pointerId);
+  });
+  btn.addEventListener('pointermove', function(e){
+    if (!down) return;
+    var dx = e.clientX - down.px, dy = e.clientY - down.py;
+    if (!dragged && Math.abs(dx) + Math.abs(dy) < DRAG_THRESHOLD) return;
+    dragged = true; sw.classList.add('dragging'); setOpen(false);
+    place(down.ox + dx, down.oy + dy);
+  });
+  btn.addEventListener('pointerup', function(e){
+    if (!down) return;
+    try { btn.releasePointerCapture(e.pointerId); } catch (e2) {}
+    if (dragged) { sw.classList.remove('dragging');
+      var r = sw.getBoundingClientRect();
+      try { sessionStorage.setItem(POS_KEY, JSON.stringify({ x:r.left, y:r.top })); } catch (e3) {} }
+    down = null;
+  });
+
+  function setOpen(o){ menu.hidden = !o; btn.setAttribute('aria-expanded', String(o)); if (o) positionMenu(); }
+  btn.onclick = function(e){ e.stopPropagation(); if (dragged) { dragged = false; return; } setOpen(menu.hidden); };
+  document.addEventListener('click', function(e){ if (!sw.contains(e.target)) setOpen(false); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') setOpen(false); });
+})();
+</script>

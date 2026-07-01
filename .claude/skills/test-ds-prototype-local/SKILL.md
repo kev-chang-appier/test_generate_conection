@@ -19,11 +19,11 @@ arguments:
       in DS3 tokens — Inter font, larger radii, borders-only elevation, 40px controls, full-pill chips.
   - name: fidelity
     description: >
-      "hifi" (default) authors component CSS from the tokens doc + per-component guidelines (chosen via
-      the component index) for pixel-accurate output. "lofi" is the
+      "hifi" (default) authors component CSS from the tokens doc + the consolidated component guide
+      (escalating to a per-component file only where needed) for pixel-accurate output. "lofi" is the
       ideation path: injects the prebuilt local component CSS kit (resources/lofi-ds{2,3}-style.css)
-      and uses the local pattern floor (resources/lofi-patterns.md) in place of the per-component
-      reads — much faster/cheaper, on-brand but approximate, still pattern-compliant, for exploring
+      and uses the local pattern floor (resources/lofi-patterns.md) in place of the component-guide
+      read — much faster/cheaper, on-brand but approximate, still pattern-compliant, for exploring
       direction before committing to a hifi build.
 type: encoded-preference
 allowed-tools: >
@@ -54,8 +54,9 @@ cache).
 |---|---|
 | Design tokens — DS2 (default) | `DESIGN-DS2.md` |
 | Design tokens — DS3 (when `ds: 3`) | `DESIGN-DS3.md` |
-| Component index — pick the component/file (**primary** entry point) | `component-guidelines/README.md` |
-| Per-component guideline (anatomy, states, geometry) | `component-guidelines/{component}.md` |
+| Component guide — essence (selection + hand-authoring anatomy; **primary**) | `component-guidelines/guideline-essence-for-AI.md` |
+| Per-component guideline (escalation: full states/geometry) | `component-guidelines/{component}.md` |
+| Component guidelines index | `component-guidelines/README.md` |
 | Design-Patterns index | `Design-Patterns/README.md` |
 | Per-pattern guideline | `Design-Patterns/{pattern}.md` |
 | Design principles (quality lens) | `DESIGN-PRINCIPLES.md` |
@@ -128,28 +129,34 @@ Identify the active rail/nav item for this screen so you can set it correctly in
 3. **Read the design docs the screen needs** — all live under `$SKILL_ROOT/resources/design/`:
    - The **tokens doc for the chosen version** (Phase 0): `design/DESIGN-DS2.md` for DS2, or
      `design/DESIGN-DS3.md` for DS3. Exactly one tokens doc per run.
-   - **The component index: `design/component-guidelines/README.md`** — the **primary** entry point for
-     component guidance. Its grouped tables map each UI need to the right file and component, tell you how
-     to pick between siblings (e.g. `TextSelect` vs `TagSelect`, `SingleSelectFilter` vs `MultiSelectFilter`),
-     and give a one-line summary of each. Start here to decide which components the screen uses and which
-     files to open. It's small — read it whole.
-   - **Per-component guidelines: `design/component-guidelines/{component}.md`** — for each component the
-     screen renders, read its file for the anatomy (HTML skeleton + anti-native-control guardrails),
-     sizes/spacing, visual states, and do's & don'ts. This matters most for the high-risk interactive
-     components — `TextSelect`, `DatePicker`, `TagSelect`, `SingleSelectFilter`, `Pagination`, `Table` —
-     whose DS form diverges from generic/market norms enough that model priors alone render them wrong.
-     File names are exact — `filters.md` is plural; when unsure which file owns a component, the index
-     resolves it.
+   - **The component guide (essence): `design/component-guidelines/guideline-essence-for-AI.md`** — the
+     **primary** component guidance, sufficient for most screens. It carries component selection (which
+     component, how to pick between siblings, the non-obvious rules) **and** hand-authoring anatomy (HTML
+     skeletons + anti-native-control guardrails) for the high-risk interactive components — TextSelect,
+     DatePicker, TagSelect, SingleSelectFilter, Pagination, Table. One file covers the whole screen and
+     matches the per-component files on DS2 fidelity (LESSONS-LEARNED §7).
+   - **When to escalate to `design/component-guidelines/{component}.md`** — read the full file for a
+     single component only when one of these holds; otherwise the essence is enough:
+       - **(hifi) the essence guide flags the component in its "Hi-fi escalation" list** — its DS form
+         diverges from generic/market norms enough that essence + model priors render it wrong; always
+         open the full file for these;
+       - you need its **full visual states** (empty/loading/error/selected) or **exact geometry** beyond
+         what the essence summarizes — pixel-exact or multi-state hifi work;
+       - it's interactive / anatomy-heavy but **not** in the essence anatomy set above;
+       - the essence entry is too terse for an unusual component.
+     Read only that one component's file — never blanket-read the essence **plus** every detail file
+     (worst cost/quality tradeoff: highest tokens, no fidelity gain). File names are exact — `filters.md`
+     is plural.
    - Only the `design/Design-Patterns/{pattern}.md` files for UX patterns applicable to this screen.
 
-Cover every component the screen actually renders (resolve it in the index, then read its `{component}.md`)
-— completeness across the screen's real components, not speculative breadth.
+Cover every component the screen actually renders (read its essence entry; escalate a detail file only
+where the rule above applies) — completeness across the screen's real components, not speculative breadth.
 
 **Batch the reads — never one file per turn.** These `Read`s are independent, so issue them as parallel
 calls in a single message; reading them one at a time is the main way this skill burns through Claude
-Chat's per-turn tool-use cap. Two waves only: **(1)** the shell + tokens doc + component index + any
-Design-Patterns index together; then **(2)** once the index tells you which components/patterns apply,
-all the per-component and per-pattern files in one parallel batch. lofi collapses to a single wave
+Chat's per-turn tool-use cap. Two waves only: **(1)** the shell + tokens doc + essence guide + any
+Design-Patterns index together; then **(2)** only where a component needs escalation (rule above), the
+per-component and per-pattern files in one parallel batch. lofi collapses to a single wave
 (shell + kit + `lofi-patterns.md`).
 
 **Read only the sections you need.** The docs are local and read-only, so there's nothing to fetch or
@@ -159,10 +166,10 @@ cache — but they're large, so still **`Read` only the sections in play**, neve
   ignore everything from `  dark-primary:` on (dark-theme / animation / interaction-state are noise). In
   DS3, read the geometry tables (Component heights, Shapes, per-component `components:` block) — they
   carry the DS3 control/row heights, radii, and font directly.
-- **per-component guidelines** — for each `{component}.md` the screen needs, `Read` only the relevant
-  sections (Anatomy, Sizes/Spacing, Visual States, Do's & Don'ts), not the whole file. The index
-  (`README.md`) is small — read it whole. Guidelines are shared across versions; apply the DS3 variant
-  notes in DS3 runs.
+- **component guide (essence)** — read the entries for the components the screen renders **plus** the
+  "Hand-authoring anatomy" section for any high-risk interactive ones. For an escalated `{component}.md`,
+  `Read` only the relevant sections (Anatomy, Sizes/Spacing, Visual States, Do's & Don'ts), not the whole
+  file. Shared across versions; apply the DS3 variant notes in DS3 runs.
 
 **Design-Patterns caveat** — `design/Design-Patterns/layout-patterns.md` is labelled "DS3 Layout
 Patterns". Use it for layout structure (content padding, card containers, gap values) but do
@@ -422,10 +429,8 @@ and uses the right patterns — not whether spacing is pixel-exact.)*
 
 **Design quality** — structural checks aren't enough; review the screen against the design
 principles (`Read $SKILL_ROOT/resources/design/DESIGN-PRINCIPLES.md` if not already loaded):
-5. **Hierarchy & contrast** — one clear primary per region; status reads at a glance via the **Status
-   component** (semantic-colored dot + `text-high` label, **no background tint** — reserve tinted
-   badges/tags for other labeling); selected / error states are unmistakable, not a faint cue alone;
-   sections divided by surface or border, not a soft shadow.
+5. **Hierarchy & contrast** — one clear primary per region; selected / error states are unmistakable,
+   not a faint cue alone; sections divided by surface or border, not a soft shadow.
 6. **Grouping** — related fields and controls share a container or inset sub-section, not equal spacing.
 7. **States** *(hifi)* — every state chosen in Phase 0 is actually built, not just the populated happy
    path. *(lofi is single-view — not applicable.)*

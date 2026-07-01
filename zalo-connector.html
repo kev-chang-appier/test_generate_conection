@@ -1,0 +1,450 @@
+<title>Zalo connector — Integration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* DS3 tokens (light theme) */
+    --primary: #296AFF;
+    --primary-hover: #0E4EFF;
+    --primary-pressed: #0032E0;
+
+    --text-high: #000A3A;
+    --text-med: rgba(0,10,58,0.80);
+    --text-low: rgba(0,10,58,0.57);
+    --text-low-minus: rgba(0,10,58,0.45);
+    --text-white: #FFFFFF;
+
+    --surface-quaternary: #EDEEF1;
+    --surface-tertiary: #F2F3F5;
+    --surface-secondary: #F4F6F9;
+    --surface-primary: #FFFFFF;
+    --surface-card: #FAFBFC;
+
+    --border-general: #D9DAE1;
+    --border-emphasis: #B3B6C4;
+    --border-popover: #DEDFE5;
+
+    --semantic-green: #00BA77;
+    --semantic-red: #FB4078;
+
+    --overlay-hover: rgba(0,10,58,0.05);
+    --overlay-pressed: rgba(0,10,58,0.10);
+    --overlay-hover-blue: rgba(41,106,255,0.07);
+    --overlay-selected-blue: rgba(41,106,255,0.07);
+
+    --shadow-s: 0px 1px 8px 0px rgba(0,10,58,0.08);
+    --shadow-m: 0px 2px 16px 0px rgba(0,10,58,0.16);
+
+    --radius-4: 4px;
+    --radius-8: 8px;
+    --radius-12: 12px;
+    --radius-16: 16px;
+    --radius-full: 9999px;
+
+    --zalo-blue: #0068FF;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--surface-secondary); color: var(--text-high);
+    -webkit-font-smoothing: antialiased; letter-spacing: 0.2px;
+  }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--border-general); border-radius: 4px; }
+  a { color: inherit; text-decoration: none; }
+
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    width: 240px; flex-shrink: 0; background: var(--surface-primary);
+    border-right: 1px solid var(--border-general);
+    display: flex; flex-direction: column;
+  }
+  .sidebar-head {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px; padding: 0 16px; flex-shrink: 0;
+  }
+  .sidebar-head .title { font-size: 16px; font-weight: 600; line-height: 24px; color: var(--text-high); }
+  .sidebar-head .pin {
+    width: 28px; height: 28px; border-radius: var(--radius-8); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; color: var(--text-low);
+    transition: background 0.1s;
+  }
+  .sidebar-head .pin:hover { background: var(--overlay-hover); }
+  .nav-group { display: flex; flex-direction: column; gap: 2px; padding: 4px 8px; }
+  .nav-section-label {
+    font-size: 12px; font-weight: 600; line-height: 16px; letter-spacing: 0.2px;
+    color: var(--text-low); padding: 12px 12px 4px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+    border-radius: var(--radius-8); cursor: pointer; transition: background 0.1s;
+  }
+  .nav-item:hover { background: var(--overlay-hover); }
+  .nav-item.active { background: var(--overlay-hover-blue); }
+  .nav-item .ico { display: inline-flex; flex-shrink: 0; color: var(--text-med); }
+  .nav-item.active .ico { color: var(--primary); }
+  .nav-item .lbl { font-size: 14px; font-weight: 600; line-height: 20px; color: var(--text-high); white-space: nowrap; }
+  .nav-item.active .lbl { color: var(--primary); }
+
+  /* ---------- Main column ---------- */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .view { display: none; flex-direction: column; flex: 1; min-height: 0; }
+  .view.active { display: flex; }
+
+  .page-header {
+    height: 56px; flex-shrink: 0; background: var(--surface-primary);
+    border-bottom: 1px solid var(--border-general);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
+  }
+  .breadcrumb { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .crumb { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; line-height: 20px; white-space: nowrap; }
+  .crumb-proj {
+    display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--text-med);
+  }
+  .proj-avatar {
+    width: 20px; height: 20px; border-radius: var(--radius-4); background: var(--primary);
+    color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 0.2px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .crumb-link { color: var(--text-low); font-weight: 400; cursor: pointer; }
+  .crumb-link:hover { color: var(--text-high); }
+  .crumb-current { color: var(--text-high); font-weight: 600; }
+  .crumb-sep { display: inline-flex; color: var(--text-low); }
+
+  .content { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+  .content-inner { max-width: 1040px; width: 100%; display: flex; flex-direction: column; gap: 24px; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    height: 40px; padding: 0 16px; border-radius: var(--radius-8); font-family: inherit;
+    font-size: 14px; font-weight: 600; line-height: 20px; letter-spacing: 0.2px;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+    white-space: nowrap; border: 1px solid transparent; transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
+    outline: none;
+  }
+  .btn:focus-visible { box-shadow: 0 0 0 2px rgba(41,106,255,0.4); }
+  .btn .ico { display: inline-flex; }
+  .btn-primary { background: var(--primary); color: var(--text-white); }
+  .btn-primary:hover { background: var(--primary-hover); }
+  .btn-primary:active { background: var(--primary-pressed); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--surface-primary); border-color: var(--border-general); color: var(--text-med); }
+  .btn-secondary:hover { background: var(--surface-tertiary); }
+  .btn-emphasis { background: var(--surface-primary); border-color: var(--primary); color: var(--primary); }
+  .btn-emphasis:hover { background: var(--surface-tertiary); border-color: var(--primary-hover); }
+
+  /* ---------- Cards ---------- */
+  .card {
+    background: var(--surface-primary); border: 1px solid var(--border-general);
+    border-radius: var(--radius-12);
+  }
+
+  /* Zalo intro card */
+  .intro-card { display: flex; align-items: center; gap: 16px; padding: 16px 24px; }
+  .zalo-logo {
+    width: 44px; height: 44px; flex-shrink: 0; border-radius: var(--radius-8);
+    background: #E8F1FF; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .zalo-logo span { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; color: var(--zalo-blue); }
+  .intro-text h1 { font-size: 16px; font-weight: 600; line-height: 24px; color: var(--text-high); }
+  .intro-text p { font-size: 14px; font-weight: 400; line-height: 20px; color: var(--text-med); margin-top: 2px; }
+
+  /* Accounts card */
+  .accounts-head {
+    display: flex; align-items: center; justify-content: space-between; padding: 20px 24px;
+  }
+  .accounts-head h2 { font-size: 16px; font-weight: 600; line-height: 24px; color: var(--text-high); }
+
+  /* ---------- Table ---------- */
+  .table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .table thead th {
+    height: 44px; background: var(--surface-tertiary); text-align: left;
+    font-size: 14px; font-weight: 600; line-height: 20px; color: var(--text-med);
+    padding: 0 16px; vertical-align: middle;
+  }
+  .table thead th.col-status, .table thead th.col-url { border-left: 1px solid var(--border-general); }
+  .table thead th:first-child { border-top-left-radius: 0; }
+  .col-account { width: 42%; }
+  .col-status { width: 24%; }
+  .col-url { width: 34%; }
+  .table tbody td {
+    height: 52px; padding: 0 16px; vertical-align: middle;
+    border-bottom: 1px solid var(--border-general);
+    font-size: 14px; font-weight: 400; line-height: 20px; color: var(--text-high);
+  }
+  .account-cell { display: flex; align-items: center; gap: 8px; }
+  .row-avatar {
+    width: 24px; height: 24px; flex-shrink: 0; border-radius: var(--radius-full);
+    background: var(--surface-quaternary); color: var(--border-emphasis);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .account-cell .name { color: var(--primary); font-weight: 400; cursor: pointer; flex: 1; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .account-cell .name:hover { text-decoration: underline; }
+  .kebab {
+    width: 28px; height: 28px; flex-shrink: 0; border-radius: var(--radius-8); border: none; background: transparent;
+    color: var(--text-low); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    transition: background 0.1s;
+  }
+  .kebab:hover { background: var(--overlay-hover); }
+
+  .status { display: inline-flex; align-items: center; gap: 8px; }
+  .status .ico { display: inline-flex; }
+  .status.ok .ico .dot {
+    width: 16px; height: 16px; border-radius: var(--radius-full); background: var(--semantic-green);
+    display: inline-flex; align-items: center; justify-content: center; color: #fff;
+  }
+  .status.err .ico { color: var(--semantic-red); }
+  .status .lbl { font-size: 14px; color: var(--text-high); }
+
+  .url-cell { display: flex; align-items: center; gap: 6px; }
+  .url-cell .url {
+    color: var(--primary); cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .url-cell .url:hover { text-decoration: underline; }
+  .url-cell .ext { display: inline-flex; color: var(--primary); flex-shrink: 0; cursor: pointer; }
+
+  /* ---------- Connect form ---------- */
+  .form-card { padding: 24px 24px 24px; }
+  .step-title { font-size: 16px; font-weight: 600; line-height: 24px; color: var(--text-high); }
+  .step-desc { font-size: 14px; font-weight: 400; line-height: 20px; color: var(--text-med); margin-top: 8px; }
+  .step2 { margin-top: 28px; }
+  .lnk { color: var(--primary); cursor: pointer; }
+  .lnk:hover { text-decoration: underline; }
+
+  .field { margin-top: 16px; max-width: 460px; }
+  .field label { display: block; font-size: 14px; font-weight: 600; line-height: 20px; color: var(--text-high); margin-bottom: 8px; }
+  .req { color: var(--semantic-red); margin-left: 2px; }
+  .input {
+    width: 100%; height: 40px; padding: 10px 12px; border-radius: var(--radius-8);
+    border: 1px solid var(--border-general); background: var(--surface-primary);
+    font-family: inherit; font-size: 14px; line-height: 20px; color: var(--text-high); outline: none;
+    transition: border-color 0.12s, box-shadow 0.12s;
+  }
+  .input::placeholder { color: var(--text-low-minus); }
+  .input:hover { border-color: var(--border-emphasis); }
+  .input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(41,106,255,0.2); }
+
+  .field .btn { margin-top: 0; }
+  .continue-row { margin-top: 16px; }
+
+  .step-list { list-style: none; margin-top: 16px; display: flex; flex-direction: column; gap: 16px; }
+  .step-list > li { display: flex; flex-direction: column; gap: 8px; }
+  .bullet-text { display: flex; gap: 10px; font-size: 14px; line-height: 20px; color: var(--text-med); }
+  .bullet-text::before { content: "•"; color: var(--text-med); flex-shrink: 0; }
+  .bullet-text b { font-weight: 600; color: var(--text-high); }
+  .readonly-field {
+    max-width: 100%; height: 40px; padding: 10px 12px; border-radius: var(--radius-8);
+    border: 1px solid var(--border-general); background: var(--surface-tertiary);
+    font-size: 14px; line-height: 20px; color: var(--text-low-minus);
+    display: flex; align-items: center; margin-left: 20px;
+  }
+  .form-note { margin-top: 16px; font-size: 14px; line-height: 20px; color: var(--text-med); }
+  .authorize-row { margin-top: 24px; }
+</style>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="channelOutlined20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="M10.747 5.56a2.34 2.34 0 1 0-1.5-.005v1.196A3.331 3.331 0 0 0 7.502 7.79l-1.035-.666a2.34 2.34 0 1 0-.747 1.303l1.064.685a3.336 3.336 0 0 0 0 1.778l-1.072.69a2.34 2.34 0 1 0 .753 1.3l1.037-.668a3.33 3.33 0 0 0 1.745 1.038v1.196a2.341 2.341 0 1 0 1.5-.004V13.25a3.331 3.331 0 0 0 1.745-1.038l1.043.67a2.34 2.34 0 1 0 .751-1.3l-1.075-.692a3.34 3.34 0 0 0 0-1.778l1.066-.687a2.34 2.34 0 1 0-.745-1.304l-1.04.67a3.331 3.331 0 0 0-1.745-1.039V5.56Zm-.744-1.38a.84.84 0 1 0 0-1.68.84.84 0 0 0 0 1.68Zm5.827 3.333a.84.84 0 1 0 0-1.68.84.84 0 0 0 0 1.68Zm-4 2.487a1.833 1.833 0 1 1-3.666 0 1.833 1.833 0 0 1 3.667 0Zm4.84 3.34a.84.84 0 1 1-1.68 0 .84.84 0 0 1 1.68 0Zm-11.66 0a.84.84 0 1 1-1.68 0 .84.84 0 0 1 1.68 0Zm-.84-5.827a.84.84 0 1 0 0-1.68.84.84 0 0 0 0 1.68Zm6.673 9.147a.84.84 0 1 1-1.68 0 .84.84 0 0 1 1.68 0Z"/></symbol>
+  <symbol id="codeOutlined20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="M3.5 4.5V6h13V4.5h-13Zm13 11V7h-13v8.5h13ZM2 4v12a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1Zm8.682 4.522a.75.75 0 0 1 .546.91l-1 4a.75.75 0 0 1-1.456-.364l1-4a.75.75 0 0 1 .91-.546ZM7.755 9.804a.75.75 0 0 0-1.01-1.108l-1.881 1.713a1.154 1.154 0 0 0 0 1.681l1.88 1.714a.75.75 0 1 0 1.011-1.108L6.168 11.25l1.587-1.446Zm5.5-1.108a.75.75 0 0 0-1.01 1.108l1.587 1.446-.646.589-.941.857a.75.75 0 1 0 1.01 1.108l.94-.857.941-.856a1.154 1.154 0 0 0 0-1.681l-1.88-1.714Z"/></symbol>
+  <symbol id="applicationOutlined20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="M14 8.244 11.756 6 14 3.756 16.244 6 14 8.244Zm-3.742-1.62a.882.882 0 0 1 0-1.248l3.118-3.118a.882.882 0 0 1 1.248 0l3.118 3.118a.882.882 0 0 1 0 1.248l-3.118 3.118a.882.882 0 0 1-1.248 0l-3.118-3.118ZM4.5 7.5v-3h3v3h-3ZM3 4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4Zm9.5 8.5v3h3v-3h-3ZM12 11a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1h-4Zm-7.5 4.5v-3h3v3h-3ZM3 12a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4Z"/></symbol>
+  <symbol id="viewHistoryOutlined20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="M5 3.5h9A1.5 1.5 0 0 1 15.5 5v3.189a5.963 5.963 0 0 1 1.5.614V5a3 3 0 0 0-3-3H5a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h4.528a6.007 6.007 0 0 1-.984-1.5H5A1.5 1.5 0 0 1 3.5 15V5A1.5 1.5 0 0 1 5 3.5ZM5.75 9h4.932a6.034 6.034 0 0 0-1.556 1.5H5.75a.75.75 0 0 1 0-1.5Zm0 3.5h2.439A6.01 6.01 0 0 0 8 14H5.75a.75.75 0 0 1 0-1.5Zm0-7a.75.75 0 0 0 0 1.5h7.5a.75.75 0 0 0 0-1.5h-7.5ZM19 14a5 5 0 1 1-10 0 5 5 0 0 1 10 0Zm-5-3.75a.75.75 0 0 1 .75.75v3.037l1.585.792a.75.75 0 1 1-.67 1.342l-2-1-.415-.207V11a.75.75 0 0 1 .75-.75Z"/></symbol>
+  <symbol id="userOutlined20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="M12.5 6a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0ZM10 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm4.9 3.539c.97.599 1.573 1.487 1.6 2.961h-13c.027-1.474.63-2.362 1.6-2.961C6.197 12.862 7.875 12.5 10 12.5c2.127 0 3.803.362 4.9 1.039ZM2 16.6c0-4.1 3.5-5.6 8-5.6s8 1.5 8 5.6v.4a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-.4Z"/></symbol>
+  <symbol id="pinOutlined20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="m8.999 7.165.846.072.496-.689 1.953-2.705a.844.844 0 0 1 1.27-.102l2.699 2.671a.79.79 0 0 1-.104 1.214l-2.62 1.852-.734.519.111.891a4.22 4.22 0 0 1-.36 2.3L6.838 7.53a4.386 4.386 0 0 1 2.16-.365Zm5.62-4.49a2.344 2.344 0 0 0-3.541.29L9.125 5.67a5.865 5.865 0 0 0-3.715.938c-.536.352-.53 1.094-.076 1.544l2.741 2.712L2.47 16.47a.75.75 0 1 0 1.06 1.06l5.611-5.61 2.779 2.75c.455.45 1.204.454 1.56-.076a5.714 5.714 0 0 0 .925-3.891l2.62-1.852a2.29 2.29 0 0 0 .293-3.505l-2.699-2.671Z"/></symbol>
+  <symbol id="directionalDefaultRightOutlined16" viewBox="0 0 16 16" fill-rule="evenodd"><path d="M6.242 4.2a.75.75 0 0 1 1.06.044l2.996 3.25a.75.75 0 0 1 0 1.017l-2.997 3.25A.75.75 0 1 1 6.2 10.745l2.528-2.743L6.2 5.261a.75.75 0 0 1 .043-1.06Z"/></symbol>
+  <symbol id="addOutlined16" viewBox="0 0 16 16" fill-rule="evenodd"><path d="M8.75 4.75a.75.75 0 0 0-1.5 0v2.5h-2.5a.75.75 0 0 0 0 1.5h2.5v2.5a.75.75 0 0 0 1.5 0v-2.5h2.5a.75.75 0 0 0 0-1.5h-2.5v-2.5Z"/></symbol>
+  <symbol id="moreOutlined20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="M10 6c.825 0 1.5-.675 1.5-1.5S10.825 3 10 3s-1.5.675-1.5 1.5S9.175 6 10 6Zm0 3c-.825 0-1.5.675-1.5 1.5S9.175 12 10 12s1.5-.675 1.5-1.5S10.825 9 10 9Zm-1.5 7.5c0-.825.675-1.5 1.5-1.5s1.5.675 1.5 1.5S10.825 18 10 18s-1.5-.675-1.5-1.5Z"/></symbol>
+  <symbol id="checkOutlined16" viewBox="0 0 16 16" fill-rule="evenodd"><path d="M12.767 5.21a.75.75 0 0 1 .021 1.06l-5.766 5.996a.75.75 0 0 1-1.081 0l-2.732-2.84a.75.75 0 1 1 1.082-1.04l2.19 2.278 5.226-5.434a.75.75 0 0 1 1.06-.02Z"/></symbol>
+  <symbol id="errorSolid16" viewBox="0 0 16 16" fill-rule="evenodd"><path d="M2 8c0-3.312 2.688-6 6-6s6 2.688 6 6-2.688 6-6 6-6-2.688-6-6Zm8.707-2.707a1 1 0 0 1 0 1.414L9.414 8l1.293 1.293a1 1 0 0 1-1.414 1.414L8 9.414l-1.293 1.293a1 1 0 0 1-1.414-1.414L6.586 8 5.293 6.707a1 1 0 1 1 1.414-1.414L8 6.586l1.293-1.293a1 1 0 0 1 1.414 0Z"/></symbol>
+  <symbol id="externalLinkOutlined16" viewBox="0 0 16 16" fill-rule="evenodd"><path d="M9.915 1.75a.75.75 0 0 1 .75-.75h3.587a.75.75 0 0 1 .75.75v3.587a.75.75 0 0 1-1.5 0V3.56L8.28 8.78a.75.75 0 1 1-1.06-1.06l5.22-5.22h-1.776a.75.75 0 0 1-.75-.75ZM3 2h5.067l-1.5 1.5H3a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5V9.93l1.5-1.5V13a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/></symbol>
+</svg>
+
+<div class="app">
+  <!-- Sidebar (shared across both views) -->
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <span class="title">Integration</span>
+      <span class="pin" title="Pin sidebar"><svg width="16" height="16" fill-rule="evenodd" style="fill:currentColor"><use href="#pinOutlined20"></use></svg></span>
+    </div>
+    <nav class="nav-group">
+      <div class="nav-item active"><span class="ico"><svg width="20" height="20" fill-rule="evenodd" style="fill:currentColor"><use href="#channelOutlined20"></use></svg></span><span class="lbl">Channels</span></div>
+      <div class="nav-item"><span class="ico"><svg width="20" height="20" fill-rule="evenodd" style="fill:currentColor"><use href="#codeOutlined20"></use></svg></span><span class="lbl">SDKs</span></div>
+      <div class="nav-item"><span class="ico"><svg width="20" height="20" fill-rule="evenodd" style="fill:currentColor"><use href="#applicationOutlined20"></use></svg></span><span class="lbl">Partner integrations</span></div>
+    </nav>
+    <div class="nav-section-label">Logs</div>
+    <nav class="nav-group" style="padding-top:0">
+      <div class="nav-item"><span class="ico"><svg width="20" height="20" fill-rule="evenodd" style="fill:currentColor"><use href="#viewHistoryOutlined20"></use></svg></span><span class="lbl">Recent Activities</span></div>
+      <div class="nav-item"><span class="ico"><svg width="20" height="20" fill-rule="evenodd" style="fill:currentColor"><use href="#userOutlined20"></use></svg></span><span class="lbl">Recent Users</span></div>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <!-- ============ VIEW: Connection list ============ -->
+    <section class="view active" id="view-list">
+      <header class="page-header">
+        <div class="breadcrumb">
+          <span class="crumb crumb-proj"><span class="proj-avatar">PN</span>Project name</span>
+          <span class="crumb-sep"><svg width="16" height="16" fill-rule="evenodd" style="fill:currentColor"><use href="#directionalDefaultRightOutlined16"></use></svg></span>
+          <span class="crumb crumb-link">Channels</span>
+          <span class="crumb-sep"><svg width="16" height="16" fill-rule="evenodd" style="fill:currentColor"><use href="#directionalDefaultRightOutlined16"></use></svg></span>
+          <span class="crumb crumb-current">Zalo</span>
+        </div>
+      </header>
+      <div class="content">
+        <div class="content-inner">
+          <!-- Zalo intro -->
+          <div class="card intro-card">
+            <span class="zalo-logo"><span>Zalo</span></span>
+            <div class="intro-text">
+              <h1>Zalo</h1>
+              <p>Connect your Zalo to access Appier features.</p>
+            </div>
+          </div>
+          <!-- Connected accounts -->
+          <div class="card">
+            <div class="accounts-head">
+              <h2>Connected accounts</h2>
+              <button class="btn btn-primary" onclick="showView('connect')">
+                <span class="ico"><svg width="16" height="16" fill-rule="evenodd" style="fill:currentColor"><use href="#addOutlined16"></use></svg></span>
+                Connect Zalo
+              </button>
+            </div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th class="col-account">Account</th>
+                  <th class="col-status">Status</th>
+                  <th class="col-url">URL</th>
+                </tr>
+              </thead>
+              <tbody id="accountsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW: Connect Zalo ============ -->
+    <section class="view" id="view-connect">
+      <header class="page-header">
+        <div class="breadcrumb">
+          <span class="crumb crumb-proj"><span class="proj-avatar">PN</span>Project name</span>
+          <span class="crumb-sep"><svg width="16" height="16" fill-rule="evenodd" style="fill:currentColor"><use href="#directionalDefaultRightOutlined16"></use></svg></span>
+          <span class="crumb crumb-link">Channels</span>
+          <span class="crumb-sep"><svg width="16" height="16" fill-rule="evenodd" style="fill:currentColor"><use href="#directionalDefaultRightOutlined16"></use></svg></span>
+          <span class="crumb crumb-link" onclick="showView('list')">Zalo</span>
+          <span class="crumb-sep"><svg width="16" height="16" fill-rule="evenodd" style="fill:currentColor"><use href="#directionalDefaultRightOutlined16"></use></svg></span>
+          <span class="crumb crumb-current">Settings</span>
+        </div>
+        <button class="btn btn-secondary" onclick="showView('list')">Cancel</button>
+      </header>
+      <div class="content">
+        <div class="content-inner">
+          <div class="card form-card">
+            <!-- Step 1 -->
+            <div class="step-title">Step 1</div>
+            <p class="step-desc">Provide the following information from the <span class="lnk">Zalo for Developers</span>.</p>
+            <div class="field">
+              <label for="appId">Zalo Application ID<span class="req">*</span></label>
+              <input class="input" id="appId" type="text" placeholder="Enter Application ID">
+            </div>
+            <div class="field">
+              <label for="appSecret">Application secret key<span class="req">*</span></label>
+              <input class="input" id="appSecret" type="text" placeholder="Enter Application secret key">
+            </div>
+            <div class="continue-row">
+              <button class="btn btn-emphasis" onclick="completeStep1()">Continue</button>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="step-title step2">Step 2</div>
+            <p class="step-desc">Complete the settings below on the <span class="lnk">Zalo for Developers</span>, then return here for step 3.</p>
+            <ul class="step-list">
+              <li>
+                <div class="bullet-text"><span>Verify the <b>Domain URL</b> below on Zalo's <span class="lnk">Domain authentication</span> page.</span></div>
+                <div class="readonly-field" id="domainUrl">The URL will be generated after step 1 completion</div>
+              </li>
+              <li>
+                <div class="bullet-text"><span>Provide the <b>Official Account Callback URL</b> below to Zalo's <span class="lnk">General Settings</span>.</span></div>
+                <div class="readonly-field" id="callbackUrl">The URL will be generated after step 1 completion</div>
+              </li>
+              <li>
+                <div class="bullet-text"><span>Provide the <b>Webhook URL</b> below to Zalo's <span class="lnk">Webhook</span>.</span></div>
+                <div class="readonly-field" id="webhookUrl">The URL will be generated after step 1 completion</div>
+              </li>
+            </ul>
+            <p class="form-note">Provide the following information from the <span class="lnk">Zalo for Developers</span>.</p>
+            <div class="field">
+              <label for="oaSecret">OA Secret Key<span class="req">*</span></label>
+              <input class="input" id="oaSecret" type="text" placeholder="Enter OA secret key">
+            </div>
+            <p class="form-note">Complete the required configuration in <span class="lnk">Zalo for Developers</span> before using this connection. <span class="lnk">View setup guide</span></p>
+            <div class="authorize-row">
+              <button class="btn btn-primary" id="authorizeBtn" disabled onclick="showView('list')">Authorize</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+  // ---- Connected accounts data ----
+  var ACCOUNTS = [
+    { name: 'Zalo account name', status: 'ok',  url: 'https://sample.me/R/ti/p/@379tbdeo' },
+    { name: 'Zalo account name', status: 'err', url: 'https://sample.me/R/ti/p/@379tbdeo' }
+  ];
+
+  function statusCell(s) {
+    if (s === 'ok') {
+      return '<span class="status ok"><span class="ico"><span class="dot">'
+        + '<svg width="12" height="12" fill-rule="evenodd" style="fill:currentColor"><use href="#checkOutlined16"></use></svg>'
+        + '</span></span><span class="lbl">Connected</span></span>';
+    }
+    return '<span class="status err"><span class="ico">'
+      + '<svg width="16" height="16" fill-rule="evenodd" style="fill:currentColor"><use href="#errorSolid16"></use></svg>'
+      + '</span><span class="lbl">Error</span></span>';
+  }
+
+  function renderAccounts(rows) {
+    document.getElementById('accountsBody').innerHTML = rows.map(function (r) {
+      return '<tr>'
+        + '<td><div class="account-cell">'
+        +   '<span class="row-avatar"><svg width="16" height="16" fill-rule="evenodd" style="fill:currentColor"><use href="#userOutlined20"></use></svg></span>'
+        +   '<a class="name" href="#" onclick="return false">' + r.name + '</a>'
+        +   '<button class="kebab" title="More actions" onclick="return false"><svg width="20" height="20" fill-rule="evenodd" style="fill:currentColor"><use href="#moreOutlined20"></use></svg></button>'
+        + '</div></td>'
+        + '<td>' + statusCell(r.status) + '</td>'
+        + '<td><div class="url-cell"><a class="url" href="#" onclick="return false">' + r.url + '</a>'
+        +   '<span class="ext"><svg width="16" height="16" fill-rule="evenodd" style="fill:currentColor"><use href="#externalLinkOutlined16"></use></svg></span>'
+        + '</div></td>'
+        + '</tr>';
+    }).join('');
+  }
+  renderAccounts(ACCOUNTS);
+
+  // ---- View switching ----
+  function showView(id) {
+    document.getElementById('view-list').classList.toggle('active', id === 'list');
+    document.getElementById('view-connect').classList.toggle('active', id === 'connect');
+    document.querySelector('.content').scrollTop = 0;
+  }
+
+  // ---- Step 1 → generate URLs, enable Authorize ----
+  function completeStep1() {
+    var id = (document.getElementById('appId').value || '').trim();
+    var base = 'https://connect.appier.com/zalo/' + (id || 'app');
+    document.getElementById('domainUrl').textContent = base + '/domain';
+    document.getElementById('callbackUrl').textContent = base + '/callback';
+    document.getElementById('webhookUrl').textContent = base + '/webhook';
+    [ 'domainUrl', 'callbackUrl', 'webhookUrl' ].forEach(function (k) {
+      document.getElementById(k).style.color = 'var(--text-high)';
+    });
+    document.getElementById('authorizeBtn').disabled = false;
+  }
+</script>

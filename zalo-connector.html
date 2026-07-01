@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Integration · Zalo connector</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============ DS2 tokens (from DESIGN-DS2.md — light theme) ============ */
+:root{
+  --primary:#296AFF; --primary-hover:#0E4EFF; --primary-pressed:#0032E0;
+  --text-high:#000A3A; --text-med:rgba(0,10,58,.80); --text-low:rgba(0,10,58,.57);
+  --text-low-minus:rgba(0,10,58,.45); --text-white:#FFFFFF;
+  --surface-quaternary:#EDEEF1; --surface-tertiary:#F2F3F5; --surface-secondary:#F7F8F9;
+  --surface-primary:#FFFFFF; --surface-card:#FAFBFC;
+  --border-general:#D9DAE1; --border-popover:#DEDFE5; --border-emphasis:#B3B6C4;
+  --semantic-green:#00BA77; --semantic-red:#FB4078;
+  --blue-10:#EAF1FF; --blue-30:#C1D6FF;
+  --radius-sm:4px; --radius-md:8px;
+  --shadow-s:0 1px 8px rgba(0,10,58,.08); --shadow-m:0 2px 16px rgba(0,10,58,.16);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;height:100%;}
+body{font-family:"Open Sans",-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text-high);
+  background:var(--surface-quaternary);-webkit-font-smoothing:antialiased;}
+/* typography utilities */
+.t-h4{font-size:16px;font-weight:600;line-height:24px;letter-spacing:.2px;}
+.t-h5{font-size:14px;font-weight:600;line-height:20px;letter-spacing:.2px;}
+.t-h6{font-size:12px;font-weight:600;line-height:16px;letter-spacing:.2px;}
+.t-b1{font-size:14px;font-weight:400;line-height:20px;letter-spacing:.2px;}
+.t-b1h{font-size:14px;font-weight:700;line-height:20px;letter-spacing:.2px;}
+.t-b2{font-size:12px;font-weight:400;line-height:16px;letter-spacing:.2px;}
+svg{display:inline-block;vertical-align:middle;fill:currentColor;}
+
+/* ============ App frame ============ */
+.app{display:flex;height:100vh;overflow:hidden;}
+
+/* ---- Sidebar ---- */
+.sidebar{width:208px;flex:0 0 208px;background:var(--surface-primary);
+  border-right:1px solid var(--border-general);display:flex;flex-direction:column;}
+.sidebar-head{display:flex;align-items:center;justify-content:space-between;
+  height:48px;padding:0 16px;}
+.sidebar-head .title{font-size:16px;font-weight:600;letter-spacing:.2px;color:var(--text-high);}
+.sidebar-head .pin{color:var(--text-low);display:inline-flex;cursor:pointer;transform:rotate(45deg);}
+.nav{padding:8px;display:flex;flex-direction:column;gap:2px;}
+.nav-label{padding:12px 8px 4px;color:var(--text-low);font-size:12px;font-weight:600;
+  line-height:16px;letter-spacing:.2px;}
+.nav-item{display:flex;align-items:center;gap:12px;height:36px;padding:0 8px;border-radius:var(--radius-sm);
+  color:var(--text-med);cursor:pointer;text-decoration:none;font-size:14px;line-height:20px;letter-spacing:.2px;}
+.nav-item svg{color:var(--text-low);flex:0 0 auto;}
+.nav-item:hover{background:rgba(0,10,58,.05);}
+.nav-item.active{background:var(--blue-10);color:var(--primary);font-weight:600;}
+.nav-item.active svg{color:var(--primary);}
+
+/* ---- Main ---- */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;}
+.topbar{height:48px;flex:0 0 48px;background:var(--surface-primary);
+  border-bottom:1px solid var(--border-general);box-shadow:var(--shadow-s);
+  display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:2;}
+.crumbs{display:flex;align-items:center;gap:8px;min-width:0;}
+.pn-badge{width:22px;height:22px;border-radius:var(--radius-sm);background:var(--blue-10);
+  color:var(--primary);font-size:11px;font-weight:700;display:inline-flex;align-items:center;
+  justify-content:center;letter-spacing:.2px;flex:0 0 auto;}
+.crumb{font-size:14px;font-weight:600;line-height:20px;letter-spacing:.2px;color:var(--text-low);
+  text-decoration:none;cursor:pointer;white-space:nowrap;}
+.crumb:hover{color:var(--text-med);}
+.crumb.current{color:var(--text-high);cursor:default;}
+.crumb-sep{color:var(--text-low);display:inline-flex;}
+.topbar-actions{display:flex;align-items:center;gap:8px;}
+
+.content{flex:1;overflow:auto;padding:24px;}
+.page{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:24px;}
+
+/* ---- Cards ---- */
+.card{background:var(--surface-card);border-radius:var(--radius-md);box-shadow:var(--shadow-s);
+  border:1px solid var(--border-general);padding:20px;}
+.card--flush{padding:20px 20px 4px;}
+
+/* ---- Buttons ---- */
+.btn{height:32px;border-radius:var(--radius-sm);padding:6px 12px;font-family:inherit;
+  font-size:14px;font-weight:600;line-height:20px;letter-spacing:.2px;display:inline-flex;
+  align-items:center;gap:8px;cursor:pointer;border:1px solid transparent;white-space:nowrap;
+  transition:background .1s ease,border-color .1s ease;}
+.btn svg{width:20px;height:20px;}
+.btn-primary{background:var(--primary);color:var(--text-white);border-color:var(--primary);}
+.btn-primary:hover{background:var(--primary-hover);border-color:var(--primary-hover);}
+.btn-primary:active{background:var(--primary-pressed);border-color:var(--primary-pressed);}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;background:var(--primary);border-color:var(--primary);}
+.btn-secondary{background:var(--surface-primary);color:var(--text-med);border-color:var(--border-general);}
+.btn-secondary:hover{background:var(--surface-tertiary);}
+.btn-emphasis{background:var(--surface-primary);color:var(--primary);border-color:var(--primary);}
+.btn-emphasis:hover{background:var(--surface-tertiary);border-color:var(--primary-hover);}
+
+/* ---- Links ---- */
+.link{color:var(--primary);text-decoration:none;cursor:pointer;}
+.link:hover{color:var(--primary-pressed);text-decoration:underline;}
+.link-ref{color:var(--text-high);text-decoration:underline;text-underline-offset:2px;cursor:pointer;}
+.link-ref:hover{color:var(--text-high);}
+
+/* ---- Product header card (Zalo) ---- */
+.prod-head{display:flex;align-items:center;gap:16px;}
+.prod-desc{color:var(--text-med);margin-top:4px;}
+/* Zalo brand tile (CSS badge — no fabricated brand SVG) */
+.zalo-logo{width:48px;height:48px;flex:0 0 auto;border-radius:12px;background:#FFFFFF;
+  border:1px solid var(--border-general);display:flex;align-items:center;justify-content:center;
+  position:relative;box-shadow:var(--shadow-s);}
+.zalo-logo b{color:#0068FF;font-size:16px;font-weight:800;letter-spacing:-.3px;line-height:1;}
+.zalo-logo::after{content:"";position:absolute;left:9px;bottom:7px;width:6px;height:6px;
+  background:#0068FF;border-radius:0 6px 6px 6px;transform:scaleX(-1);}
+
+/* ---- Section header (card title + action) ---- */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+
+/* ---- Table ---- */
+.tbl{width:100%;border-collapse:collapse;table-layout:fixed;}
+.tbl thead th{height:40px;background:var(--surface-tertiary);color:var(--text-med);
+  font-size:14px;font-weight:600;line-height:20px;letter-spacing:.2px;text-align:left;
+  padding:0 16px;border-top:1px solid var(--border-general);border-bottom:1px solid var(--border-general);}
+.tbl thead th:first-child{border-top-left-radius:var(--radius-sm);border-bottom-left-radius:var(--radius-sm);border-left:1px solid var(--border-general);}
+.tbl thead th:last-child{border-top-right-radius:var(--radius-sm);border-bottom-right-radius:var(--radius-sm);border-right:1px solid var(--border-general);}
+.tbl tbody td{height:48px;padding:0 16px;border-bottom:1px solid var(--border-general);
+  font-size:14px;line-height:20px;letter-spacing:.2px;color:var(--text-high);vertical-align:middle;}
+.col-account{width:44%;}
+.col-status{width:24%;}
+.col-url{width:32%;}
+/* account cell */
+.acct{display:flex;align-items:center;gap:8px;}
+.avatar{width:28px;height:28px;flex:0 0 auto;border-radius:50%;background:var(--surface-tertiary);
+  border:1px solid var(--border-general);display:inline-flex;align-items:center;justify-content:center;
+  color:var(--text-low);}
+.avatar svg{width:18px;height:18px;}
+.acct-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.kebab{width:24px;height:24px;flex:0 0 auto;border:none;background:none;border-radius:var(--radius-sm);
+  color:var(--text-low);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
+.kebab:hover{background:rgba(0,10,58,.05);color:var(--text-med);}
+.kebab svg{width:20px;height:20px;transform:rotate(90deg);}
+/* status cell */
+.status{display:inline-flex;align-items:center;gap:8px;color:var(--text-high);}
+.status .badge{width:16px;height:16px;flex:0 0 auto;border-radius:50%;display:inline-flex;
+  align-items:center;justify-content:center;color:#fff;}
+.status .badge.ok{background:var(--semantic-green);}
+.status .badge.err{background:var(--semantic-red);font-size:11px;font-weight:800;line-height:1;}
+.status .badge.ok svg{width:11px;height:11px;}
+/* url cell */
+.url-cell{display:inline-flex;align-items:center;gap:6px;min-width:0;}
+.url-cell .link{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.url-cell svg{width:16px;height:16px;color:var(--text-low);flex:0 0 auto;}
+
+/* ---- Form (connect view) ---- */
+.step-title{margin:0 0 4px;}
+.step-lead{color:var(--text-med);margin:0 0 16px;}
+.form-block+.form-block{margin-top:28px;}
+.field{margin-bottom:16px;max-width:420px;}
+.field label{display:block;margin-bottom:4px;color:var(--text-high);}
+.req{color:var(--semantic-red);margin-left:2px;}
+.input{width:100%;height:32px;border:1px solid var(--border-general);border-radius:var(--radius-sm);
+  padding:6px 12px;font-family:inherit;font-size:14px;line-height:20px;letter-spacing:.2px;
+  color:var(--text-high);background:var(--surface-primary);}
+.input::placeholder{color:var(--text-low-minus);}
+.input:focus{outline:2px solid var(--primary);outline-offset:0;border-color:var(--primary);}
+.input:hover{border-color:var(--border-emphasis);}
+.input.readonly{background:var(--surface-secondary);color:var(--text-low);cursor:default;}
+.steps-list{list-style:none;margin:0;padding:0;}
+.steps-list>li{position:relative;padding-left:18px;margin-bottom:16px;}
+.steps-list>li::before{content:"";position:absolute;left:4px;top:8px;width:4px;height:4px;
+  border-radius:50%;background:var(--text-med);}
+.steps-list .li-text{color:var(--text-med);margin-bottom:8px;}
+.section-note{color:var(--text-med);margin:16px 0;max-width:640px;}
+.divider{height:1px;background:var(--border-general);margin:24px 0;border:0;}
+
+/* views */
+.view{display:none;}
+.view.active{display:block;}
+</style>
+</head>
+<body>
+<!-- ICON SPRITE -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <symbol id="addOutlined20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="M10.75 5.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 1 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z"/></symbol>
+    <symbol id="directionalArrowRightOutlined16" viewBox="0 0 16 16" fill-rule="evenodd"><path d="M13.298 8.509a.75.75 0 0 0 0-1.017l-2.997-3.25a.75.75 0 0 0-1.103 1.016l1.835 1.99H3.75a.75.75 0 1 0 0 1.5h7.287l-1.839 1.995a.75.75 0 0 0 1.103 1.016l2.997-3.25Z"/></symbol>
+    <symbol id="userOutlined20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="M12.5 6a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0ZM10 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm4.9 3.539c.97.599 1.573 1.487 1.6 2.961h-13c.027-1.474.63-2.362 1.6-2.961C6.197 12.862 7.875 12.5 10 12.5c2.127 0 3.803.362 4.9 1.039ZM2 16.6c0-4.1 3.5-5.6 8-5.6s8 1.5 8 5.6v.4a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-.4Z"/></symbol>
+    <symbol id="checkOutlined16" viewBox="0 0 16 16" fill-rule="evenodd"><path d="M12.767 5.21a.75.75 0 0 1 .021 1.06l-5.766 5.996a.75.75 0 0 1-1.081 0l-2.732-2.84a.75.75 0 1 1 1.082-1.04l2.19 2.278 5.226-5.434a.75.75 0 0 1 1.06-.02Z"/></symbol>
+    <symbol id="externalLinkOutlined16" viewBox="0 0 16 16" fill-rule="evenodd"><path d="M9.915 1.75a.75.75 0 0 1 .75-.75h3.587a.75.75 0 0 1 .75.75v3.587a.75.75 0 0 1-1.5 0V3.56L8.28 8.78a.75.75 0 1 1-1.06-1.06l5.22-5.22h-1.776a.75.75 0 0 1-.75-.75ZM3 2h5.067l-1.5 1.5H3a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5V9.93l1.5-1.5V13a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/></symbol>
+    <symbol id="moreOutlined20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="M10 6c.825 0 1.5-.675 1.5-1.5S10.825 3 10 3s-1.5.675-1.5 1.5S9.175 6 10 6Zm0 3c-.825 0-1.5.675-1.5 1.5S9.175 12 10 12s1.5-.675 1.5-1.5S10.825 9 10 9Zm-1.5 7.5c0-.825.675-1.5 1.5-1.5s1.5.675 1.5 1.5S10.825 18 10 18s-1.5-.675-1.5-1.5Z"/></symbol>
+    <symbol id="pinOutlined20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="m8.999 7.165.846.072.496-.689 1.953-2.705a.844.844 0 0 1 1.27-.102l2.699 2.671a.79.79 0 0 1-.104 1.214l-2.62 1.852-.734.519.111.891a4.22 4.22 0 0 1-.36 2.3L6.838 7.53a4.386 4.386 0 0 1 2.16-.365Zm5.62-4.49a2.344 2.344 0 0 0-3.541.29L9.125 5.67a5.865 5.865 0 0 0-3.715.938c-.536.352-.53 1.094-.076 1.544l2.741 2.712L2.47 16.47a.75.75 0 1 0 1.06 1.06l5.611-5.61 2.779 2.75c.455.45 1.204.454 1.56-.076a5.714 5.714 0 0 0 .925-3.891l2.62-1.852a2.29 2.29 0 0 0 .293-3.505l-2.699-2.671Z"/></symbol>
+    <symbol id="channelOutlined20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="M10.747 5.56a2.34 2.34 0 1 0-1.5-.005v1.196A3.331 3.331 0 0 0 7.502 7.79l-1.035-.666a2.34 2.34 0 1 0-.747 1.303l1.064.685a3.336 3.336 0 0 0 0 1.778l-1.072.69a2.34 2.34 0 1 0 .753 1.3l1.037-.668a3.33 3.33 0 0 0 1.745 1.038v1.196a2.341 2.341 0 1 0 1.5-.004V13.25a3.331 3.331 0 0 0 1.745-1.038l1.043.67a2.34 2.34 0 1 0 .751-1.3l-1.075-.692a3.34 3.34 0 0 0 0-1.778l1.066-.687a2.34 2.34 0 1 0-.745-1.304l-1.04.67a3.331 3.331 0 0 0-1.745-1.039V5.56Zm-.744-1.38a.84.84 0 1 0 0-1.68.84.84 0 0 0 0 1.68Zm5.827 3.333a.84.84 0 1 0 0-1.68.84.84 0 0 0 0 1.68Zm-4 2.487a1.833 1.833 0 1 1-3.666 0 1.833 1.833 0 0 1 3.667 0Zm4.84 3.34a.84.84 0 1 1-1.68 0 .84.84 0 0 1 1.68 0Zm-11.66 0a.84.84 0 1 1-1.68 0 .84.84 0 0 1 1.68 0Zm-.84-5.827a.84.84 0 1 0 0-1.68.84.84 0 0 0 0 1.68Zm6.673 9.147a.84.84 0 1 1-1.68 0 .84.84 0 0 1 1.68 0Z"/></symbol>
+    <symbol id="sdkOutlined24" viewBox="0 0 24 24" fill-rule="evenodd"><path d="M11.2929 20.4645L8.32843 17.5H6.49995C6.11881 17.5 5.74672 17.4612 5.38742 17.3874L9.87868 21.8787C11.0503 23.0503 12.9497 23.0503 14.1213 21.8787L18.6126 17.3874C18.2533 17.4612 17.8811 17.5 17.4999 17.5H15.6716L12.7071 20.4645C12.3166 20.855 11.6834 20.855 11.2929 20.4645ZM14.1213 2.12132L18.6126 6.61261C18.2533 6.53878 17.8811 6.5 17.4999 6.5H15.6716L12.7071 3.53553C12.3166 3.14501 11.6834 3.14501 11.2929 3.53553L8.32843 6.5H6.49995C6.11881 6.5 5.74672 6.53877 5.38742 6.61258L9.87868 2.12132C11.0503 0.949748 12.9497 0.949747 14.1213 2.12132ZM6.04616 10.5448C6.0275 10.2908 5.93999 10.0927 5.78365 9.95048C5.62964 9.80825 5.39512 9.73714 5.0801 9.73714C4.87942 9.73714 4.71491 9.76381 4.58657 9.81714C4.46056 9.86794 4.36722 9.93778 4.30655 10.0267C4.24588 10.1156 4.21438 10.2171 4.21204 10.3314C4.20738 10.4254 4.22254 10.5105 4.25755 10.5867C4.29488 10.6603 4.35322 10.7276 4.43256 10.7886C4.5119 10.847 4.6134 10.9003 4.73708 10.9486C4.86075 10.9968 5.00776 11.04 5.17811 11.0781L5.76615 11.2152C6.16284 11.3067 6.50236 11.4273 6.78471 11.5771C7.06707 11.727 7.29808 11.9035 7.47776 12.1067C7.65744 12.3073 7.78928 12.5333 7.87329 12.7848C7.95963 13.0362 8.00396 13.3105 8.0063 13.6076C8.00396 14.1206 7.88612 14.5549 7.65277 14.9105C7.41942 15.266 7.08573 15.5365 6.65171 15.7219C6.22001 15.9073 5.70081 16 5.0941 16C4.47106 16 3.92736 15.8997 3.46299 15.699C3.00096 15.4984 2.6416 15.1898 2.38492 14.7733C2.13057 14.3543 2.00223 13.8184 1.99989 13.1657H3.84802C3.85969 13.4044 3.91452 13.6051 4.01253 13.7676C4.11054 13.9302 4.24821 14.0533 4.42556 14.1371C4.60524 14.221 4.81875 14.2629 5.0661 14.2629C5.27378 14.2629 5.44763 14.2349 5.58763 14.179C5.72764 14.1232 5.83382 14.0457 5.90616 13.9467C5.97849 13.8476 6.01583 13.7346 6.01816 13.6076C6.01583 13.4883 5.97966 13.3841 5.90966 13.2952C5.84199 13.2038 5.72998 13.1225 5.57363 13.0514C5.41729 12.9778 5.20611 12.9092 4.94009 12.8457L4.22604 12.6781C3.59133 12.5283 3.0908 12.2781 2.72444 11.9276C2.36042 11.5746 2.17957 11.0933 2.18191 10.4838C2.17957 9.98857 2.30091 9.55556 2.54593 9.18476C2.79328 8.81143 3.13514 8.52063 3.5715 8.31238C4.0102 8.10413 4.51306 8 5.0801 8C5.65881 8 6.15934 8.1054 6.5817 8.31619C7.00406 8.52698 7.32958 8.82413 7.55827 9.20762C7.78928 9.58857 7.90596 10.0343 7.90829 10.5448H6.04616ZM11.5048 15.9086H8.7466V8.10667H11.4768C12.2142 8.10667 12.8512 8.26286 13.3879 8.57524C13.9269 8.88508 14.3423 9.33206 14.634 9.91619C14.928 10.4978 15.075 11.1949 15.075 12.0076C15.075 12.8203 14.9292 13.5187 14.6375 14.1029C14.3458 14.6844 13.9328 15.1314 13.3984 15.4438C12.864 15.7537 12.2328 15.9086 11.5048 15.9086ZM10.6927 14.1105H11.4348C11.7895 14.1105 12.0917 14.0483 12.3413 13.9238C12.5934 13.7994 12.7847 13.5848 12.9154 13.28C13.0484 12.9752 13.1149 12.5511 13.1149 12.0076C13.1149 11.4641 13.0472 11.04 12.9119 10.7352C12.7789 10.4305 12.5829 10.2159 12.3238 10.0914C12.0672 9.96698 11.7521 9.90476 11.3788 9.90476H10.6927V14.1105ZM17.9216 8.10667H15.9755V15.9086H17.9216V13.8971L18.5656 12.9829L20.1757 15.9086H22.4999L20.0217 11.581L22.4439 8.10667H20.1757L18.0196 11.261H17.9216V8.10667Z"/></symbol>
+    <symbol id="gridViewOutlined20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="M4.5 4.5v3.222h3.222V4.5H4.5Zm7.778 0v3.222H15.5V4.5h-3.222ZM4.5 12.278V15.5h3.222v-3.222H4.5Zm7.778 0V15.5H15.5v-3.222h-3.222ZM3 3.875C3 3.392 3.392 3 3.875 3h4.472c.483 0 .875.392.875.875v4.472a.875.875 0 0 1-.875.875H3.875A.875.875 0 0 1 3 8.347V3.875Zm7.778 0c0-.483.391-.875.875-.875h4.472c.483 0 .875.392.875.875v4.472a.875.875 0 0 1-.875.875h-4.472a.875.875 0 0 1-.875-.875V3.875Zm-6.903 6.903a.875.875 0 0 0-.875.875v4.472c0 .483.392.875.875.875h4.472a.875.875 0 0 0 .875-.875v-4.472a.875.875 0 0 0-.875-.875H3.875Zm6.903.875c0-.484.391-.875.875-.875h4.472c.483 0 .875.391.875.875v4.472a.875.875 0 0 1-.875.875h-4.472a.875.875 0 0 1-.875-.875v-4.472Z"/></symbol>
+    <symbol id="viewHistoryOutlined20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="M5 3.5h9A1.5 1.5 0 0 1 15.5 5v3.189a5.963 5.963 0 0 1 1.5.614V5a3 3 0 0 0-3-3H5a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h4.528a6.007 6.007 0 0 1-.984-1.5H5A1.5 1.5 0 0 1 3.5 15V5A1.5 1.5 0 0 1 5 3.5ZM5.75 9h4.932a6.034 6.034 0 0 0-1.556 1.5H5.75a.75.75 0 0 1 0-1.5Zm0 3.5h2.439A6.01 6.01 0 0 0 8 14H5.75a.75.75 0 0 1 0-1.5Zm0-7a.75.75 0 0 0 0 1.5h7.5a.75.75 0 0 0 0-1.5h-7.5ZM19 14a5 5 0 1 1-10 0 5 5 0 0 1 10 0Zm-5-3.75a.75.75 0 0 1 .75.75v3.037l1.585.792a.75.75 0 1 1-.67 1.342l-2-1-.415-.207V11a.75.75 0 0 1 .75-.75Z"/></symbol>
+    <symbol id="userHistoryOutlined20" viewBox="0 0 20 20" fill-rule="evenodd"><path d="M11.5 5.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM9.5 9a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm-6 6.6c0-1.578.593-2.492 1.493-3.085.828-.545 2.026-.884 3.537-.984A6.007 6.007 0 0 1 9.528 10H9.5C5.281 10 2 11.5 2 15.6V17a1 1 0 0 0 1 1h6.528a6.007 6.007 0 0 1-.984-1.5H3.5v-.9ZM19 14a5 5 0 1 1-10 0 5 5 0 0 1 10 0Zm-5-3.75a.75.75 0 0 1 .75.75v3.037l1.585.792a.75.75 0 1 1-.67 1.342l-2-1-.415-.207V11a.75.75 0 0 1 .75-.75Z"/></symbol>
+</svg>
+
+<div class="app">
+  <!-- ============ Sidebar ============ -->
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <span class="title">Integration</span>
+      <span class="pin" title="Pin navigation"><svg width="20" height="20"><use href="#pinOutlined20"></use></svg></span>
+    </div>
+    <nav class="nav">
+      <a class="nav-item active" href="#"><svg width="20" height="20"><use href="#channelOutlined20"></use></svg>Channels</a>
+      <a class="nav-item" href="#"><svg width="20" height="20"><use href="#sdkOutlined24"></use></svg>SDKs</a>
+      <a class="nav-item" href="#"><svg width="20" height="20"><use href="#gridViewOutlined20"></use></svg>Partner integrations</a>
+      <div class="nav-label">Logs</div>
+      <a class="nav-item" href="#"><svg width="20" height="20"><use href="#viewHistoryOutlined20"></use></svg>Recent Activities</a>
+      <a class="nav-item" href="#"><svg width="20" height="20"><use href="#userHistoryOutlined20"></use></svg>Recent Users</a>
+    </nav>
+  </aside>
+
+  <!-- ============ Main ============ -->
+  <div class="main">
+    <!-- Header bar -->
+    <header class="topbar">
+      <div class="crumbs">
+        <span class="pn-badge">PN</span>
+        <a class="crumb" href="#">Project name</a>
+        <span class="crumb-sep"><svg width="16" height="16"><use href="#directionalArrowRightOutlined16"></use></svg></span>
+        <a class="crumb" href="#">Channels</a>
+        <span class="crumb-sep"><svg width="16" height="16"><use href="#directionalArrowRightOutlined16"></use></svg></span>
+        <!-- Zalo crumb: current on list view, ancestor link on connect view -->
+        <a class="crumb current" id="crumbZalo" onclick="showList();return false;">Zalo</a>
+        <span class="crumb-sep" id="crumbSepSettings" style="display:none;"><svg width="16" height="16"><use href="#directionalArrowRightOutlined16"></use></svg></span>
+        <span class="crumb current" id="crumbSettings" style="display:none;">Settings</span>
+      </div>
+      <div class="topbar-actions" id="connectActions" style="display:none;">
+        <button class="btn btn-secondary" onclick="showList()">Cancel</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- ==================== LIST VIEW ==================== -->
+      <div class="view active" id="listView">
+        <div class="page">
+          <!-- Product header card -->
+          <section class="card">
+            <div class="prod-head">
+              <div class="zalo-logo"><b>Zalo</b></div>
+              <div>
+                <div class="t-h4">Zalo</div>
+                <div class="prod-desc t-b1">Connect your Zalo to access Appier features.</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Connected accounts card -->
+          <section class="card card--flush">
+            <div class="section-head">
+              <div class="t-h4">Connected accounts</div>
+              <button class="btn btn-primary" onclick="showConnect()">
+                <svg><use href="#addOutlined20"></use></svg>Connect Zalo
+              </button>
+            </div>
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th class="col-account">Account</th>
+                  <th class="col-status">Status</th>
+                  <th class="col-url">URL</th>
+                </tr>
+              </thead>
+              <tbody id="acctTbody"></tbody>
+            </table>
+          </section>
+        </div>
+      </div>
+
+      <!-- ==================== CONNECT VIEW ==================== -->
+      <div class="view" id="connectView">
+        <div class="page">
+          <section class="card">
+            <!-- Step 1 -->
+            <div class="form-block">
+              <h2 class="t-h4 step-title">Step 1</h2>
+              <p class="step-lead t-b1">Provide the following information from the
+                <a class="link" href="#">Zalo for Developers</a>.</p>
+              <div class="field">
+                <label for="appId" class="t-h5">Zalo Application ID<span class="req">*</span></label>
+                <input id="appId" class="input" type="text" placeholder="Enter Application ID">
+              </div>
+              <div class="field">
+                <label for="appSecret" class="t-h5">Application secret key<span class="req">*</span></label>
+                <input id="appSecret" class="input" type="password" placeholder="Enter Application secret key">
+              </div>
+              <button class="btn btn-emphasis" onclick="completeStep1()">Continue</button>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="form-block">
+              <h2 class="t-h4 step-title">Step 2</h2>
+              <p class="step-lead t-b1">Complete the settings below on the Zalo for Developers, then return here for step 3.</p>
+              <ul class="steps-list">
+                <li>
+                  <div class="li-text t-b1">Verify the <span class="t-b1h">Domain URL</span> below on Zalo's
+                    <a class="link-ref" href="#">Domain authentication</a> page.</div>
+                  <input class="input readonly" id="domainUrl" readonly value="The URL will be generated after step 1 completion" style="max-width:640px;">
+                </li>
+                <li>
+                  <div class="li-text t-b1">Provide the <span class="t-b1h">Official Account Callback URL</span> below to Zalo's
+                    <a class="link-ref" href="#">General Settings</a>.</div>
+                  <input class="input readonly" id="callbackUrl" readonly value="The URL will be generated after step 1 completion" style="max-width:640px;">
+                </li>
+                <li>
+                  <div class="li-text t-b1">Provide the <span class="t-b1h">Webhook URL</span> below to Zalo's
+                    <a class="link-ref" href="#">Webhook</a>.</div>
+                  <input class="input readonly" id="webhookUrl" readonly value="The URL will be generated after step 1 completion" style="max-width:640px;">
+                </li>
+              </ul>
+              <p class="section-note t-b1">Provide the following information from the
+                <a class="link" href="#">Zalo for Developers</a>.</p>
+              <div class="field">
+                <label for="oaSecret" class="t-h5">OA Secret Key<span class="req">*</span></label>
+                <input id="oaSecret" class="input" type="password" placeholder="Enter OA secret key" oninput="refreshAuthorize()">
+              </div>
+              <p class="section-note t-b1">Complete the required configuration in
+                <a class="link" href="#">Zalo for Developers</a> before using this connection.
+                <a class="link" href="#">View setup guide</a></p>
+              <button class="btn btn-primary" id="authorizeBtn" disabled onclick="authorize()">Authorize</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Connected-accounts data (Rule A: JS-rendered rows) ---------- */
+var ACCOUNTS = [
+  {id:'oa-01', name:'Zalo account name', status:'connected', url:'https://sample.me/R/ti/p/@379tbdeo'},
+  {id:'oa-02', name:'Zalo account name', status:'error',     url:'https://sample.me/R/ti/p/@379tbdeo'}
+];
+var STATUS = {
+  connected:{cls:'ok',  label:'Connected', glyph:'<svg><use href="#checkOutlined16"></use></svg>'},
+  error:    {cls:'err', label:'Error',     glyph:'!'}
+};
+function renderAccounts(rows){
+  document.getElementById('acctTbody').innerHTML = rows.map(function(r){
+    var s = STATUS[r.status];
+    return '<tr data-id="'+r.id+'">'
+      + '<td class="col-account"><div class="acct">'
+        + '<span class="avatar"><svg><use href="#userOutlined20"></use></svg></span>'
+        + '<a class="link acct-name" href="#" title="'+r.name+'">'+r.name+'</a>'
+        + '<button class="kebab" title="More actions" aria-label="More actions"><svg><use href="#moreOutlined20"></use></svg></button>'
+      + '</div></td>'
+      + '<td class="col-status"><span class="status"><span class="badge '+s.cls+'">'+s.glyph+'</span>'+s.label+'</span></td>'
+      + '<td class="col-url"><span class="url-cell"><a class="link" href="#" title="'+r.url+'">'+r.url+'</a>'
+        + '<svg><use href="#externalLinkOutlined16"></use></svg></span></td>'
+      + '</tr>';
+  }).join('');
+}
+renderAccounts(ACCOUNTS);
+
+/* ---------- View switching ---------- */
+function showConnect(){
+  document.getElementById('listView').classList.remove('active');
+  document.getElementById('connectView').classList.add('active');
+  document.getElementById('connectActions').style.display = 'flex';
+  document.getElementById('crumbZalo').classList.remove('current');
+  document.getElementById('crumbSepSettings').style.display = 'inline-flex';
+  document.getElementById('crumbSettings').style.display = 'inline';
+  document.querySelector('.content').scrollTop = 0;
+}
+function showList(){
+  document.getElementById('connectView').classList.remove('active');
+  document.getElementById('listView').classList.add('active');
+  document.getElementById('connectActions').style.display = 'none';
+  document.getElementById('crumbZalo').classList.add('current');
+  document.getElementById('crumbSepSettings').style.display = 'none';
+  document.getElementById('crumbSettings').style.display = 'none';
+}
+
+/* ---------- Step 1 → generate the Step 2 URLs ---------- */
+function completeStep1(){
+  var appId = document.getElementById('appId').value.trim() || 'app_2f8c1d';
+  var base = 'https://connectors.appier.com/zalo/'+appId;
+  setGenerated('domainUrl',   'https://connectors.appier.com');
+  setGenerated('callbackUrl', base+'/oauth/callback');
+  setGenerated('webhookUrl',  base+'/webhook');
+  refreshAuthorize();
+}
+function setGenerated(id, val){
+  var el = document.getElementById(id);
+  el.value = val;
+  el.classList.remove('readonly');
+}
+function refreshAuthorize(){
+  var oa = document.getElementById('oaSecret').value.trim();
+  var urlsReady = !document.getElementById('domainUrl').classList.contains('readonly');
+  document.getElementById('authorizeBtn').disabled = !(oa && urlsReady);
+}
+function authorize(){
+  var btn = document.getElementById('authorizeBtn');
+  btn.textContent = 'Authorizing…';
+  btn.disabled = true;
+}
+</script>
+</body>
+</html>
